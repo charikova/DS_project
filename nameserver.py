@@ -1,41 +1,63 @@
 from neo4jrestclient import client
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
+import requests
 
 db = client.GraphDatabase("http://localhost:7474", username="DFSnameserver", password="123")
 user_relation_label = "own"
 folders_relation_label = "store"
 PORT = 1338
+user = db.labels.create("Users")
+folder = db.labels.create("Folders")
+file = db.labels.create("Files")
 
 
 def init_db(message):
     username = message["args"]["username"]
-    query = 'MATCH (u:User) RETURN u'
-    users = db.query(query, returns=client.Node)
-    exist = False
-    for i in users:
-        if i == username:
-            exist = True
-    if exist:
-        # TODO: request to server
-        data_init = json.dumps({
-            "status": "OK",
-            "message": "Root directory cleaned, reinitialized",
-            "size": "1337"
-        })
-    else:
-        # TODO: request to server
-        user = db.labels.create("Users")
-        folder = db.labels.create("Folders")
-        file = db.labels.create("Files")
-        u1 = db.nodes.create(name=username)
-        user.add(u1)
-        data_init = json.dumps({
-            "status": "OK",
-            "message": "Root directory initialized",
-            "size": "1337"
-        })
-    return data_init
+    response = json.loads(requests.get('http://10.1.1.141:1337', json=message).text)
+    if response["status"] == "reinit":
+        query = "MATCH path = (u:Users { name:\"%s\" })-[r *1..]->(f) DETACH DELETE f, u" % username
+        db.query(query)
+        query = "MATCH (u:Users {name: \"%s\"}) DETACH DELETE u" % username
+        db.query(query)
+    new_user(username)
+    return json.dumps(response)
+
+
+def create_dir(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    data = json.loads(requests.get('http://10.1.1.141:1337', json=message).text)
+    if data["status"] == "success":
+        try:
+            if len(paths) == 3:
+                q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+                fid = db.query(q)[0][0]
+                query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Folders { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
+                        % (str(fid), paths[2])
+                db.query(query)
+            if len(paths) > 3:
+                q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+                fid = db.query(q)[0][0]
+                for p in range(2, len(paths) - 1):
+                    query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                            % (str(fid), paths[p])
+                    fid = db.query(query)[0][0]
+                query = "MATCH (s) WHERE ID(s) = 57 CREATE (n:Folders { name: 'heheh'}) CREATE (s)-[r:store]->(n)"
+                db.query(query)
+            else:
+                query = "MATCH (s:Users) WHERE s.name = \"%s\" CREATE (n:Folders { name: \'%s\'}) " \
+                        "CREATE (s)-[r:own]->(n)" % (username, paths[1])
+                db.query(query)
+        except Exception:
+            data = {"status": "error", "message": "Error during query execution"}
+    return json.dumps(data)
+
+
+def new_user(username):
+    u1 = db.nodes.create(name=username)
+    user.add(u1)
 
 
 def json_handler(content):
@@ -51,6 +73,8 @@ class Server(BaseHTTPRequestHandler):
         data_json = json.dumps('{}')
         if message["command"] == "init":
             data_json = init_db(message)
+        elif message["command"] == "create_dir":
+            data_json = create_dir(message)
         else:
             data_json = json.dumps({
                 "status": "error",
@@ -68,7 +92,7 @@ class Server(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server_address = ("localhost", PORT)
+    server_address = ("", PORT)
     httpd = HTTPServer(server_address, Server)
 
     print(f"Starting server on localhost:", PORT)
