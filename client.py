@@ -1,5 +1,5 @@
-import socket
-from time import sleep
+import json
+
 import requests
 
 
@@ -7,17 +7,12 @@ class Client:
     def __init__(self):
         self.node = None
 
-    def connect_to_server(self,):
-        self.node = socket.socket()
-        while True:
-            try:
-                self.node.connect(())
-                break
-            except ConnectionRefusedError:
-                sleep(3)
-
     def initialize(self, name):
-        response = requests.get(self.node, json={"command": "init", "dir_name": name})
+        response = json.loads(requests.get('http://18.222.226.202:1338',
+                                           json={"command": "init", "args": {"username": name}}).text)
+        print(response["status"], ':', response["message"])
+        print('Available size:', response["size"])
+
         return response
 
     def file_create(self, filepath):
@@ -59,7 +54,5 @@ class Client:
 
 if __name__ == "__main__":
     c = Client()
+    c.initialize("masha")
 
-    c.connect_to_server()
-    c.initialize()
-    c.client_run()
