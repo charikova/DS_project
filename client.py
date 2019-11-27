@@ -1,31 +1,20 @@
-import os
 import socket
 from time import sleep
 import requests
 
+
 class Client:
-    """"
     def __init__(self):
         self.node = None
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.bind(("", 7777))
-        self.sock.listen()
 
     def connect_to_server(self,):
         self.node = socket.socket()
         while True:
             try:
-                self.node.connect(
-                    (
-                        os.environ.get("SERVER_IP", "localhost"),
-                        int(os.environ["SERVER_PORT"]),
-                    )
-                )
+                self.node.connect(())
                 break
             except ConnectionRefusedError:
                 sleep(3)
-    """
 
     def initialize(self, name):
         response = requests.get(self.node, json={"command": "init", "dir_name": name})
