@@ -3,8 +3,10 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
 import subprocess
+import socket
 
-PORT = 1337
+PORT_http = 1337
+PORT_ftp_send = 7331
 
 
 def verify_path(message):
@@ -57,7 +59,7 @@ def create_dir(message):
 
     if not verify_path(message):
         os.makedirs(root_directory + path)
-        data = {"status": "success", "message": "directory crated"}
+        data = {"status": "success", "message": "directory created"}
     else:
         data = {"status": "error", "message": "directory already exists"}
 
@@ -187,6 +189,38 @@ def file_move(message):
     return data_json
 
 
+def file_download(message):
+    print("started")
+    root_directory = message["args"]["username"]
+    path = message["args"]["path"]
+
+    s = socket.socket()  # Create a socket object
+    host = ""  # Get local machine name
+    s.bind((host, PORT_ftp_send))  # Bind to the port
+    s.listen(5)  # Now wait for client connection.
+    conn, addr = s.accept()  # Establish connection with client.
+    print('Got connection from', addr)
+    data = conn.recv(1024)
+    print(data)
+    message = json_handler(data)
+    filename = root_directory + path
+    if verify_path(message):
+        f = open(filename, 'rb')
+        l = f.read(1024)
+        while (l):
+            conn.send(l)
+            l = f.read(1024)
+        f.close()
+
+        data = {"status": "error", "message": "file sent"}
+        conn.close()
+    else:
+        data = {"status": "error", "message": "no such file"}
+
+    data_json = json.dumps(data)
+    return data_json
+
+
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         content_length = int(self.headers['Content-Length'])
@@ -213,6 +247,8 @@ class Server(BaseHTTPRequestHandler):
             data_json = file_create(message)
         elif command == "file_move":
             data_json = file_move(message)
+        elif command == "file_download":
+            data_json = file_download(message)
         else:
             data_json = json.dumps({"status": "error", "message": "unknown command"})
 
@@ -226,8 +262,8 @@ class Server(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    server_address = ('', PORT)
+    server_address = ('', PORT_http)
     httpd = HTTPServer(server_address, Server)
 
-    print(f"Starting server on localhost:", PORT)
+    print(f"Starting server on localhost:", PORT_http)
     httpd.serve_forever()
