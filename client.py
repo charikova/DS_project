@@ -1,12 +1,35 @@
+import os
+import socket
+from time import sleep
+import requests
+
 class Client:
+    """"
     def __init__(self):
-        return
+        self.node = None
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind(("", 7777))
+        self.sock.listen()
 
-    def connect_to_server(self, ):
-        return
+    def connect_to_server(self,):
+        self.node = socket.socket()
+        while True:
+            try:
+                self.node.connect(
+                    (
+                        os.environ.get("SERVER_IP", "localhost"),
+                        int(os.environ["SERVER_PORT"]),
+                    )
+                )
+                break
+            except ConnectionRefusedError:
+                sleep(3)
+    """
 
-    def initialize(self):
-        return
+    def initialize(self, name):
+        response = requests.get(self.node, json={"command": "init", "dir_name": name})
+        return response
 
     def file_create(self, filepath):
         return
@@ -43,4 +66,11 @@ class Client:
 
     def client_run(self):
         return
-    
+
+
+if __name__ == "__main__":
+    c = Client()
+
+    c.connect_to_server()
+    c.initialize()
+    c.client_run()
