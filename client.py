@@ -10,32 +10,18 @@ def student():
     return render_template("index.html")
 
 
-@app.route('/result', methods=['POST', 'GET'])
-def result():
-    name = request.form.getlist('Name')[0]
-    print(name)
-    response = requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}})
-    print(response)
-    #response = json.loads(request.get_json('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
-    #print(response["status"], ':', response["message"])
-    #print('Available size:', response["size"])
-    return render_template("result.html", result=result)
+@app.route('/initialize', methods=['POST', 'GET'])
+def initialize():
+    name = request.form.getlist('username')[0]
+    response = json.loads(requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+    return render_template("initialize.html", result=response)
 
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-def initialize(self, name):
-    response = json.loads(requests.get('http://18.222.226.202:1338',
-                                       json={"command": "init", "args": {"username": name}}).text)
-    print(response["status"], ':', response["message"])
-    print('Available size:', response["size"])
-    return response
-
-
-def file_create(self, filepath):
-    return
+@app.route('/file_create', methods=['POST', 'GET'])
+def file_create():
+    name = request.form.getlist('filename')[0]
+    response = json.loads(requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+    return render_template("file_create.html", result=response)
 
 
 def file_read(self, filepath):
@@ -70,8 +56,11 @@ def read_directory(self, filepath):
     return
 
 
-def make_directory(self, filepath):
-    return
+@app.route('/directory_create', methods=['POST', 'GET'])
+def directory_create():
+    name = request.form.getlist('dirname')[0]
+    response = json.loads(requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+    return render_template("directory_create.html", result=response)
 
 
 def delete_directory(self, filepath):
@@ -80,3 +69,7 @@ def delete_directory(self, filepath):
 
 def client_run(self):
     return
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
