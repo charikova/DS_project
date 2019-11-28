@@ -18,14 +18,14 @@ def start():
 @app.route('/initialize', methods=['POST', 'GET'])
 def initialize():
     name = request.form.getlist('username')[0]
-    response = json.loads(requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "init", "args": {"username": name}}).text)
     return render_template("initialize.html", result=response)
 
 
 @app.route('/file_create', methods=['POST', 'GET'])
 def file_create():
     name = request.form.getlist('filename')[0]
-    response = json.loads(requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "init", "args": {"username": name}}).text)
     return render_template("file_create.html", result=response)
 
 
