@@ -133,6 +133,59 @@ def file_create(message):
     return json.dumps(data)
 
 
+def file_delete(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    data = json.loads(requests.get(server_ip, json=message).text)
+    if data["status"] == "success":
+        try:
+            if len(paths) > 2:
+                fid = find(paths, username)
+                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
+                        % str(fid)
+                db.query(query)
+            else:
+                query = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                        % (username, paths[1])
+                fid = db.query(query)[0][0]
+                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
+                        % str(fid)
+                db.query(query)
+        except Exception:
+            data = {"status": "error", "message": "Error during query execution"}
+    return json.dumps(data)
+
+
+def file_copy(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    data = json.loads(requests.get(server_ip, json=message).text)
+    if data["status"] == "success":
+        try:
+            if len(paths) > 2:
+                fid = find(paths, username)
+                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
+                        % str(fid)
+                db.query(query)
+            else:
+                query = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                        % (username, paths[1])
+                fid = db.query(query)[0][0]
+                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
+                        % str(fid)
+                db.query(query)
+        except Exception:
+            data = {"status": "error", "message": "Error during query execution"}
+    return json.dumps(data)
+
+
+def file_info(message):
+    data = json.loads(requests.get(server_ip, json=message).text)
+    return json.dumps(data)
+
+
 def new_user(username):
     u1 = db.nodes.create(name=username)
     user.add(u1)
@@ -157,6 +210,14 @@ class Server(BaseHTTPRequestHandler):
             data_json = list_dir(message)
         elif message["command"] == "file_create":
             data_json = file_create(message)
+        elif message["command"] == "file_info":
+            data_json = file_info(message)
+        elif message["command"] == "file_copy":
+            data_json = file_copy(message)
+        elif message["command"] == "file_delete":
+            data_json = file_delete(message)
+        elif message["command"] == "delete_dir":
+            data_json = file_delete(message)
         else:
             data_json = json.dumps({
                 "status": "error",
