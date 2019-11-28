@@ -99,8 +99,10 @@ def open_directory():
     global current_user
     global path
     name = current_user
+    print(path)
     dirname = request.form.getlist('dirname')[0]
     path += '/'
+    print(path)
     path += dirname
     response = json.loads(
         requests.get('http://10.1.1.167:1338',
