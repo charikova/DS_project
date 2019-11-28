@@ -4,6 +4,7 @@ import json
 import os
 import subprocess
 import socket
+from multiprocessing import Process
 
 PORT_http = 1337
 PORT_ftp_send = 7331
@@ -189,23 +190,19 @@ def file_move(message):
     return data_json
 
 
-def file_download(message):
-    print("started")
+def start_download(message):
     root_directory = message["args"]["username"]
     path = message["args"]["path"]
-
     s = socket.socket()  # Create a socket object
+
     host = ""  # Get local machine name
     s.bind((host, PORT_ftp_send))  # Bind to the port
     s.listen(5)  # Now wait for client connection.
+
     conn, addr = s.accept()  # Establish connection with client.
-    print('Got connection from', addr)
-    data = conn.recv(1024)
-    print(data)
-    message = json_handler(data)
-    filename = root_directory + path
-    if verify_path(message):
-        f = open(filename, 'rb')
+
+    if os.path.exists(root_directory+path):
+        f = open(root_directory+path, 'rb')
         l = f.read(1024)
         while (l):
             conn.send(l)
@@ -217,6 +214,15 @@ def file_download(message):
     else:
         data = {"status": "error", "message": "no such file"}
 
+    data_json = json.dumps(data)
+    return data_json
+
+
+def file_download(message):
+    p = Process(target=start_download(message))
+    p.start()
+
+    data = {"status": "success", "message": "download in progress"}
     data_json = json.dumps(data)
     return data_json
 
