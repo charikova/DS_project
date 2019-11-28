@@ -42,9 +42,12 @@ def file_create():
 def file_download():
     name = current_user
     filename = request.form.getlist('filename')[0]
+    global path
+    path += '/'
+    path += filename
     response = json.loads(
         requests.get('http://10.1.1.141:1337',
-                     json={"command": "", "args": {"username": name, "path": filename}}).text)
+                     json={"command": "", "args": {"username": name, "path": path}}).text)
     return render_template("file_download.html", result=response)
 
 
@@ -53,12 +56,15 @@ def file_write(self, filepath):
 
 
 @app.route('/file_delete', methods=['POST', 'GET'])
-def file_delete(self, filepath):
+def file_delete():
     name = current_user
     filename = request.form.getlist('filename')[0]
+    global path
+    path += '/'
+    path += filename
     response = json.loads(
         requests.get('http://10.1.1.141:1337',
-                     json={"command": "", "args": {"username": name, "path": filename}}).text)
+                     json={"command": "", "args": {"username": name, "path": path}}).text)
     return render_template("file_delete.html", result=response)
 
 
@@ -66,9 +72,12 @@ def file_delete(self, filepath):
 def file_info():
     name = current_user
     filename = request.form.getlist('filename')[0]
+    global path
+    path += '/'
+    path += filename
     response = json.loads(
         requests.get('http://10.1.1.141:1337',
-                     json={"command": "file_info", "args": {"username": name, "path": filename}}).text)
+                     json={"command": "file_info", "args": {"username": name, "path": path}}).text)
     return render_template("file_info.html", result=response)
 
 
@@ -87,7 +96,7 @@ def log_in():
     name = current_user
     name = request.form.getlist('name')[0]
     current_user = name
-    path += ''
+    path = ''
     response = json.loads(
         requests.get('http://10.1.1.167:1338',
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
@@ -99,10 +108,8 @@ def open_directory():
     global current_user
     global path
     name = current_user
-    print(path)
     dirname = request.form.getlist('dirname')[0]
     path += '/'
-    print(path)
     path += dirname
     response = json.loads(
         requests.get('http://10.1.1.167:1338',
