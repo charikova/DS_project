@@ -6,8 +6,13 @@ app = Flask(__name__, template_folder='templates')
 
 
 @app.route('/')
-def student():
+def index():
     return render_template("index.html")
+
+
+@app.route('/start')
+def start():
+    return render_template("start.html")
 
 
 @app.route('/initialize', methods=['POST', 'GET'])
