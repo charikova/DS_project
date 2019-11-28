@@ -10,7 +10,7 @@ PORT = 1338
 user = db.labels.create("Users")
 folder = db.labels.create("Folders")
 file = db.labels.create("Files")
-server_ip = 'http://13.59.57.151:8589'
+server_ip = 'http://10.1.1.141:1337'
 
 
 def init_db(message):
@@ -48,10 +48,10 @@ def find_create(paths, username):
 def find(paths, username):
     fileID = 0
     try:
-        if len(paths) == 3:
+        if len(paths) == 2:
             q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
             fileID = db.query(q)[0][0]
-        elif len(paths) > 3:
+        elif len(paths) > 2:
             q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
             fileID = db.query(q)[0][0]
             for p in range(2, len(paths)):
@@ -88,7 +88,7 @@ def list_dir(message):
     path = message["args"]["path"]
     username = message["args"]["username"]
     paths = path.split('/')
-    if len(paths) > 2:
+    if len(paths) > 1:
         fid = find(paths, username)
         query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) RETURN {name: f.name, label: labels(f)}" % str(fid)
         res = db.query(query)
@@ -140,14 +140,15 @@ def file_delete(message):
     data = json.loads(requests.get(server_ip, json=message).text)
     if data["status"] == "success":
         try:
-            if len(paths) > 2:
+            if len(paths) > 1:
                 fid = find(paths, username)
                 query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
                         % str(fid)
                 db.query(query)
+                print(fid)
             else:
                 query = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
-                        % (username, paths[1])
+                        % (username, paths[-1])
                 fid = db.query(query)[0][0]
                 query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
                         % str(fid)
@@ -162,22 +163,47 @@ def file_copy(message):
     username = message["args"]["username"]
     paths = path.split('/')
     data = json.loads(requests.get(server_ip, json=message).text)
+    new_name = data["args"]["filename"]
     if data["status"] == "success":
         try:
             if len(paths) > 2:
-                fid = find(paths, username)
-                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
-                        % str(fid)
+                fid = find_create(paths, username)
+                query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Files { name: \'%s\'}) CREATE (s)-[r:store]->(n) " \
+                        % (str(fid), new_name)
                 db.query(query)
             else:
-                query = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
-                        % (username, paths[1])
-                fid = db.query(query)[0][0]
-                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
-                        % str(fid)
+                query = "MATCH (s:Users) WHERE s.name = \"%s\" CREATE (n:Files { name: \'%s\'}) " \
+                        "CREATE (s)-[r:own]->(n)" % (username, new_name)
                 db.query(query)
         except Exception:
             data = {"status": "error", "message": "Error during query execution"}
+    return json.dumps(data)
+
+
+def file_move(message):
+    src_path = message["args"]["src_path"]
+    dst_path = message["args"]["dst_path"]
+    username = message["args"]["username"]
+    spaths = src_path.split('/')
+    dpaths = dst_path.split('/')
+    data = json.loads(requests.get(server_ip, json=message).text)
+    dfid = 0
+    if data["status"] == "success":
+        if len(spaths) > 1:
+            sfid = find(spaths, username)
+        else:
+            query = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                    % (username, spaths[-1])
+            sfid = db.query(query)[0][0]
+        if len(dpaths) > 2:
+            dfid = find_create(dpaths, username)
+            query = "MATCH (s) WHERE ID(s) = %s MATCH (n) WHERE ID(n) = %s MATCH (x)-[r]->(n) DELETE r " \
+                    "CREATE (s)-[f:own]->(n)" % (str(dfid), str(sfid))
+            db.query(query)
+        else:
+            query = "MATCH (s:Users) WHERE s.name = \"%s\" MATCH (n) WHERE ID(n) = %s MATCH (x)-[r]->(n) DELETE r " \
+                    "CREATE (s)-[f:own]->(n)" % (username, str(sfid))
+            db.query(query)
     return json.dumps(data)
 
 
@@ -216,6 +242,8 @@ class Server(BaseHTTPRequestHandler):
             data_json = file_copy(message)
         elif message["command"] == "file_delete":
             data_json = file_delete(message)
+        elif message["command"] == "file_move":
+            data_json = file_move(message)
         elif message["command"] == "delete_dir":
             data_json = file_delete(message)
         else:
