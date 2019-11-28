@@ -6,6 +6,8 @@ import subprocess
 import socket
 from multiprocessing import Process
 
+import requests
+
 PORT_http = 1337
 PORT_ftp_send = 7331
 
@@ -237,16 +239,22 @@ def file_download(message):
 
 
 def start_upload(message):
-    s = socket.socket()  # Create a socket object
-    host = message["args"]["client"]  # Ip address that the TCPServer  is there
-    port = int(message["args"]["port"])
+    root_directory = message["args"]["username"]
+    path = message["args"]["path"]
+    filename = root_directory + path
 
-    s.connect((host, port))
-    filename = message["args"]["username"] + message["args"]["path"]
-    print(filename)
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    host = "10.1.1.141"
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    s.bind((host, PORT_ftp_send))
+
+    s.listen()
+    conn, addr = s.accept()
+
     with open('{}'.format(filename), 'wb') as f:
         while True:
-            data = s.recv(1024)
+            data = conn.recv(1024)
             if not data:
                 break
             # write data to a file
@@ -254,7 +262,13 @@ def start_upload(message):
 
     f.close()
     print('Successfully get the file')
+    conn.close()
     s.close()
+    command = {"command": "verify_upload", "args": {"username": root_directory, "path": path}}
+    try:
+        requests.get('http://' + "10.1.1.167" + ':' + str(1338), json=command, timeout=0.000001)
+    except requests.exceptions.ReadTimeout:
+        pass
     print('connection closed')
 
 
