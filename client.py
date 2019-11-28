@@ -10,6 +10,11 @@ def index():
     return render_template("index.html")
 
 
+@app.route('/enter_filesystem')
+def enter_filesystem():
+    return render_template("enter_filesystem.html")
+
+
 @app.route('/start')
 def start():
     return render_template("start.html")
@@ -52,11 +57,17 @@ def file_copy(self, filepath, dest_filepath):
 def file_move(self, filepath, dest_filepath):
     return
 
-def open_directory(self, filepath):
-    return
+
+@app.route('/filesystem', methods=['POST', 'GET'])
+def log_in():
+    name = request.form.getlist('username')[0]
+    response = json.loads(
+        requests.get('http://13.59.57.151:8589', json={"command": "listdir", "args": {"username": name, "path": "/"}}).text)
+    print(response)
+    return render_template("filesystem.html", result=response)
 
 
-def read_directory(self, filepath):
+def open_directory():
     return
 
 
