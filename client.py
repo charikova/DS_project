@@ -100,7 +100,16 @@ def file_copy():
 
 @app.route('/file_move', methods=['POST', 'GET'])
 def file_move():
-    return
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    path_to_move = '/' + request.form.getlist('path_to_move')[0] + '/' + filename
+    global path
+    path += '/'
+    path += filename
+    response = json.loads(
+        requests.get('http://10.1.1.167:1338',
+                     json={"command": "file_move", "args": {"username": name, "src_path": path, "dst_path": path_to_move}}).text)
+    return render_template("file_copy.html", result=response)
 
 
 @app.route('/filesystem', methods=['POST', 'GET'])
