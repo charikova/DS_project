@@ -65,8 +65,6 @@ def file_delete():
     global path
     path += '/'
     path += filename
-    print(name)
-    print(path)
     response = json.loads(
         requests.get('http://10.1.1.167:1338',
                      json={"command": "file_delete", "args": {"username": name, "path": path}}).text)
@@ -87,11 +85,21 @@ def file_info():
     return render_template("file_info.html", result=response)
 
 
-def file_copy(self, filepath, dest_filepath):
-    return
+@app.route('/file_copy', methods=['POST', 'GET'])
+def file_copy():
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    global path
+    path += '/'
+    path += filename
+    response = json.loads(
+        requests.get('http://10.1.1.167:1338',
+                     json={"command": "file_copy", "args": {"username": name, "path": path}}).text)
+    return render_template("file_copy.html", result=response)
 
 
-def file_move(self, filepath, dest_filepath):
+@app.route('/file_move', methods=['POST', 'GET'])
+def file_move():
     return
 
 
