@@ -10,11 +10,12 @@ PORT = 1338
 user = db.labels.create("Users")
 folder = db.labels.create("Folders")
 file = db.labels.create("Files")
+server_ip = 'http://13.59.57.151:8589'
 
 
 def init_db(message):
     username = message["args"]["username"]
-    response = json.loads(requests.get('http://10.1.1.141:1337', json=message).text)
+    response = json.loads(requests.get(server_ip, json=message).text)
     if response["status"] == "reinit":
         query = "MATCH path = (u:Users { name:\"%s\" })-[r *1..]->(f) DETACH DELETE f, u" % username
         db.query(query)
@@ -28,23 +29,25 @@ def create_dir(message):
     path = message["args"]["path"]
     username = message["args"]["username"]
     paths = path.split('/')
-    data = json.loads(requests.get('http://10.1.1.141:1337', json=message).text)
+    data = json.loads(requests.get(server_ip, json=message).text)
     if data["status"] == "success":
         try:
             if len(paths) == 3:
                 q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
                 fid = db.query(q)[0][0]
+                print(fid)
                 query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Folders { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
                         % (str(fid), paths[2])
                 db.query(query)
-            if len(paths) > 3:
+            elif len(paths) > 3:
                 q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
                 fid = db.query(q)[0][0]
                 for p in range(2, len(paths) - 1):
                     query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
                             % (str(fid), paths[p])
                     fid = db.query(query)[0][0]
-                query = "MATCH (s) WHERE ID(s) = 57 CREATE (n:Folders { name: 'heheh'}) CREATE (s)-[r:store]->(n)"
+                query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Folders { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
+                        % (str(fid), paths[-1])
                 db.query(query)
             else:
                 query = "MATCH (s:Users) WHERE s.name = \"%s\" CREATE (n:Folders { name: \'%s\'}) " \
