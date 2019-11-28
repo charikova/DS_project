@@ -227,6 +227,7 @@ class Server(BaseHTTPRequestHandler):
         content_length = int(self.headers['Content-Length'])
         content = self.rfile.read(content_length)
         message = json_handler(content)
+        print(message)
         data_json = json.dumps('{}')
         if message["command"] == "init":
             data_json = init_db(message)
