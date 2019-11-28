@@ -194,6 +194,7 @@ def start_download(message):
     root_directory = message["args"]["username"]
     path = message["args"]["path"]
     s = socket.socket()  # Create a socket object
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     host = ""  # Get local machine name
     s.bind((host, PORT_ftp_send))  # Bind to the port
@@ -213,7 +214,8 @@ def start_download(message):
         conn.close()
     else:
         data = {"status": "error", "message": "no such file"}
-
+    conn.close()
+    s.close()
     data_json = json.dumps(data)
     return data_json
 
@@ -221,7 +223,6 @@ def start_download(message):
 def file_download(message):
     p = Process(target=start_download(message))
     p.start()
-
     data = {"status": "success", "message": "download in progress"}
     data_json = json.dumps(data)
     return data_json
