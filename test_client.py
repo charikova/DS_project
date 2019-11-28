@@ -6,18 +6,16 @@ s = socket.socket()  # Create a socket object
 host = "10.1.1.141"  # Ip address that the TCPServer  is there
 port = 7331  # Reserve a port for your service every new transfer wants a new port or you must wait.
 
-
 command = {"command": "file_download",
-                                                                     "args": {
-                                                                         "username": "roma",
-                                                                         "path": "/regex.pdf"
-                                                                     }
-                                                                     }
+           "args": {
+               "username": "roma",
+               "path": "/regex.pdf"
+           }
+           }
 try:
     requests.get('http://10.1.1.141:1337', json=command, timeout=0.000001)
 except requests.exceptions.ReadTimeout:
     pass
-
 
 s.connect((host, port))
 filename = command["args"]["path"].split("/")[-1]
