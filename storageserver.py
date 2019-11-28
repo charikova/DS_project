@@ -6,8 +6,6 @@ import subprocess
 import socket
 from multiprocessing import Process
 
-import requests
-
 PORT_http = 1337
 PORT_ftp_send = 7331
 
@@ -161,14 +159,18 @@ def file_copy(message):
     data = {}
     root_directory = message["args"]["username"]
     path = message["args"]["path"]
-    name = path.split("/")[-1]
+    ind = path.rfind(".")
+    ext = path.split("/")[-1].split(".")[-1]
     copies_number = int(subprocess.check_output('ls ' + root_directory + path + '* | wc -l', shell=True).decode(
         "utf-8").strip())
+    new_name = root_directory + path[:ind] + '_copy{}.'.format(
+        str(copies_number)) + str(ext)
 
     if verify_path(message):
-        os.system('cp ' + root_directory + path + ' ' + root_directory + path + '_copy{}'.format(str(copies_number)))
+        os.system(
+            'cp ' + str(root_directory) + path + ' ' + new_name)
         data = {"status": "success", "message": "file copied",
-                "args": {"filename": "{}".format(name + '_copy' + str(copies_number))}}
+                "args": {"filename": new_name}}
     else:
         data = {"status": "error", "message": "no such file"}
 
