@@ -6,6 +6,8 @@ import subprocess
 import socket
 from multiprocessing import Process
 
+import requests
+
 PORT_http = 1337
 PORT_ftp_send = 7331
 
@@ -194,6 +196,7 @@ def start_download(message):
     root_directory = message["args"]["username"]
     path = message["args"]["path"]
     s = socket.socket()  # Create a socket object
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     host = ""  # Get local machine name
     s.bind((host, PORT_ftp_send))  # Bind to the port
@@ -201,8 +204,8 @@ def start_download(message):
 
     conn, addr = s.accept()  # Establish connection with client.
 
-    if os.path.exists(root_directory+path):
-        f = open(root_directory+path, 'rb')
+    if os.path.exists(root_directory + path):
+        f = open(root_directory + path, 'rb')
         l = f.read(1024)
         while (l):
             conn.send(l)
@@ -213,7 +216,8 @@ def start_download(message):
         conn.close()
     else:
         data = {"status": "error", "message": "no such file"}
-
+    conn.close()
+    s.close()
     data_json = json.dumps(data)
     return data_json
 
@@ -221,8 +225,37 @@ def start_download(message):
 def file_download(message):
     p = Process(target=start_download(message))
     p.start()
-
     data = {"status": "success", "message": "download in progress"}
+    data_json = json.dumps(data)
+    return data_json
+
+
+def start_upload(message):
+    s = socket.socket()  # Create a socket object
+    host = message["args"]["client"]  # Ip address that the TCPServer  is there
+    port = int(message["args"]["port"])
+
+    s.connect((host, port))
+    filename = message["args"]["username"] + message["args"]["path"]
+    print(filename)
+    with open('{}'.format(filename), 'wb') as f:
+        while True:
+            data = s.recv(1024)
+            if not data:
+                break
+            # write data to a file
+            f.write(data)
+
+    f.close()
+    print('Successfully get the file')
+    s.close()
+    print('connection closed')
+
+
+def file_upload(message):
+    p = Process(target=start_upload(message))
+    p.start()
+    data = {"status": "success", "message": "upload in progress"}
     data_json = json.dumps(data)
     return data_json
 
@@ -255,6 +288,8 @@ class Server(BaseHTTPRequestHandler):
             data_json = file_move(message)
         elif command == "file_download":
             data_json = file_download(message)
+        elif command == "file_upload":
+            data_json = file_upload(message)
         else:
             data_json = json.dumps({"status": "error", "message": "unknown command"})
 
