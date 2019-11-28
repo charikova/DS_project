@@ -33,6 +33,7 @@
         <td></td>
         <td></td>
         <td></td>
+        <td></td>
         <td>
             <form action="http://localhost:5000/filesystem_dir" method="POST">
                 <input type="text" name="dirname"/><input type="submit" value="Open"/>
@@ -52,6 +53,11 @@
         <td>
             <form action="http://localhost:5000/file_info" method="POST">
                 <input type="text" name="filename"/><input type="submit" value="Info"/>
+            </form>
+        </td>
+        <td>
+            <form action="http://localhost:5000/file_upload" method="POST">
+                <input type="text" name="filename"/><input type="submit" value="Upload"/>
             </form>
         </td>
         <td>

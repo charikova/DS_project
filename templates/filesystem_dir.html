@@ -24,13 +24,14 @@
 </table>
 
 {{ name }}'s files:<br>
-Directory: {{ directory }}<br>
-{{ result }}
+Directory: {{ directory }} <br>
+{{ result}}
 <table>
     <tr>
         <td>
             Directory name
         </td>
+        <td></td>
         <td></td>
         <td></td>
         <td></td>
@@ -56,13 +57,18 @@ Directory: {{ directory }}<br>
             </form>
         </td>
         <td>
+            <form action="http://localhost:5000/file_upload" method="POST">
+                <input type="text" name="filename"/><input type="submit" value="Upload"/>
+            </form>
+        </td>
+        <td>
             <form action="http://localhost:5000/file_download" method="POST">
                 <input type="text" name="filename"/><input type="submit" value="Download"/>
             </form>
         </td>
         <td>
-            <form action="http://localhost:5000/">
-                <input type="submit" value="Move"/>
+            <form action="http://localhost:5000/file_move" method="POST">
+                <input type="text" name="filename"/><input type="text" name="path_to_move"/><input type="submit" value="Move"/>
             </form>
         </td>
         <td>

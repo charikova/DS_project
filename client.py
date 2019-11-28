@@ -1,4 +1,5 @@
 import json
+import socket
 from flask import Flask, render_template, request
 import requests
 
@@ -48,14 +49,75 @@ def file_download():
     global path
     path += '/'
     path += filename
-    response = json.loads(
-        requests.get('http://10.1.1.167:1338',
-                     json={"command": "", "args": {"username": name, "path": path}}).text)
-    return render_template("file_download.html", result=response)
+    host = json.loads(requests.get('http://10.1.1.167:1338', json={"command": "file_download",
+                                                                   "args": {"username": name,
+                                                                            "path": path}}).text)
+    args = host['args']
+    host = args['ip']
+    port = args['port']
+    s = socket.socket()
+    command = {"command": "file_download",
+               "args": {
+                   "username": name,
+                   "path": path
+               }
+               }
+    try:
+        requests.get('http://' + str(host) + ':' + str(1337), json=command, timeout=0.000001)
+    except requests.exceptions.ReadTimeout:
+        pass
+    s.connect((host, port))
+    filename = command["args"]["path"].split("/")[-1]
+    with open('{}'.format(filename), 'wb') as f:
+        while True:
+            print('receiving data...')
+            data = s.recv(1024)
+            if not data:
+                break
+            # write data to a file
+            f.write(data)
+
+    f.close()
+    s.close()
+    return render_template("file_download.html", result=host)
 
 
-def file_write():
-    return
+@app.route('/file_upload', methods=['POST', 'GET'])
+def file_upload():
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    global path
+    path += '/'
+    path += filename
+    host = json.loads(requests.get('http://10.1.1.167:1338', json={"command": "file_upload",
+                                                                   "args": {"username": name,
+                                                                            "path": path}}).text)
+    args = host['args']
+    host = args['ip']
+    port = args['port']
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create a socket object
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    command = {"command": "file_upload",
+               "args": {
+                   "username": name,
+                   "path": path + 'sosi.txt'
+               }
+               }
+    try:
+        requests.get('http://' + host + ':' + str(1337), json=command, timeout=0.000001)
+    except requests.exceptions.ReadTimeout:
+        pass
+    s.connect((host, 7331))
+    filepath = './sosi.txt'
+    f = open(filepath, 'rb')
+    l = f.read(1024)
+    while (l):
+        s.send(l)
+        l = f.read(1024)
+    f.close()
+    s.close()
+    return render_template("file_upload.html", result=host)
 
 
 @app.route('/file_delete', methods=['POST', 'GET'])
