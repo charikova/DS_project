@@ -24,7 +24,7 @@ def start():
 def initialize():
     name = request.form.getlist('username')[0]
     response = json.loads(
-        requests.get('http://13.59.57.151:8589', json={"command": "init", "args": {"username": name}}).text)
+        requests.get('http://10.1.1.167:1338', json={"command": "init", "args": {"username": name}}).text)
     return render_template("initialize.html", result=response)
 
 
@@ -32,9 +32,12 @@ def initialize():
 def file_create():
     name = current_user
     filename = request.form.getlist('filename')[0]
-    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "file_create",
+    global path
+    path += '/'
+    path += filename
+    response = json.loads(requests.get('http://10.1.1.167:1338', json={"command": "file_create",
                                                                          "args": {"username": name,
-                                                                                  "path": filename}}).text)
+                                                                                  "path": path}}).text)
     return render_template("file_create.html", result=response)
 
 
@@ -46,12 +49,12 @@ def file_download():
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://10.1.1.141:1337',
+        requests.get('http://10.1.1.167:1338',
                      json={"command": "", "args": {"username": name, "path": path}}).text)
     return render_template("file_download.html", result=response)
 
 
-def file_write(self, filepath):
+def file_write():
     return
 
 
@@ -62,9 +65,12 @@ def file_delete():
     global path
     path += '/'
     path += filename
+    print(name)
+    print(path)
     response = json.loads(
-        requests.get('http://10.1.1.141:1337',
-                     json={"command": "", "args": {"username": name, "path": path}}).text)
+        requests.get('http://10.1.1.167:1338',
+                     json={"command": "file_delete", "args": {"username": name, "path": path}}).text)
+
     return render_template("file_delete.html", result=response)
 
 
@@ -76,7 +82,7 @@ def file_info():
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://10.1.1.141:1337',
+        requests.get('http://10.1.1.167:1338',
                      json={"command": "file_info", "args": {"username": name, "path": path}}).text)
     return render_template("file_info.html", result=response)
 
@@ -119,14 +125,30 @@ def open_directory():
 
 @app.route('/directory_create', methods=['POST', 'GET'])
 def directory_create():
+    global current_user
     name = request.form.getlist('dirname')[0]
+    global path
+    path += '/'
+    path += name
     response = json.loads(
-        requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+        requests.get('http://10.1.1.167:1338', json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
     return render_template("directory_create.html", result=response)
 
 
-def delete_directory(self, filepath):
-    return
+@app.route('/dir_delete', methods=['POST', 'GET'])
+def delete_directory():
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    global path
+    path += '/'
+    path += filename
+    print(name)
+    print(path)
+    response = json.loads(
+        requests.get('http://10.1.1.167:1338',
+                     json={"command": "delete_dir", "args": {"username": name, "path": path}}).text)
+
+    return render_template("dir_delete.html", result=response)
 
 
 current_user = ''

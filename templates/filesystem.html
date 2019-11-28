@@ -35,12 +35,12 @@
         <td></td>
         <td>
             <form action="http://localhost:5000/filesystem_dir" method="POST">
-                <input type="text" name="dirname"/><input type="submit" value="Open"/></p>
+                <input type="text" name="dirname"/><input type="submit" value="Open"/>
             </form>
         </td>
         <td>
-            <form action="http://localhost:5000/">
-                <input type="submit" value="Delete"/>
+            <form action="http://localhost:5000/dir_delete" method="POST">
+                <input type="text" name="filename"/><input type="submit" value="Delete"/>
             </form>
         </td>
 
@@ -55,7 +55,7 @@
             </form>
         </td>
         <td>
-            <form action="http://localhost:5000/">
+            <form action="http://localhost:5000/file_download" method="POST">
                 <input type="text" name="filename"/><input type="submit" value="Download"/>
             </form>
         </td>
@@ -70,7 +70,7 @@
             </form>
         </td>
         <td>
-            <form action="http://localhost:5000/">
+            <form action="http://localhost:5000/file_delete" method="POST">
                 <input type="text" name="filename"/><input type="submit" value="Delete"/>
             </form>
         </td>
