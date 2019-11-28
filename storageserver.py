@@ -163,14 +163,18 @@ def file_copy(message):
     ext = path.split("/")[-1].split(".")[-1]
     copies_number = int(subprocess.check_output('ls ' + root_directory + path + '* | wc -l', shell=True).decode(
         "utf-8").strip())
-    new_name = root_directory + path[:ind] + '_copy{}.'.format(
-        str(copies_number)) + str(ext)
+    if ind == -1:
+        new_name = path + '_copy{}'.format(
+            str(copies_number))
+    else:
+        new_name = path[:ind] + '_copy{}.'.format(
+            str(copies_number)) + str(ext)
 
     if verify_path(message):
         os.system(
-            'cp ' + str(root_directory) + path + ' ' + new_name)
+            'cp ' + str(root_directory) + path + ' ' + root_directory + new_name)
         data = {"status": "success", "message": "file copied",
-                "args": {"filename": new_name}}
+                "args": {"filename": new_name.split("/")[-1]}}
     else:
         data = {"status": "error", "message": "no such file"}
 
@@ -268,6 +272,7 @@ class Server(BaseHTTPRequestHandler):
         content = self.rfile.read(content_length)
         message = json_handler(content)
         data_json = json.dumps('{}')
+        print(message)
         command = message["command"]
 
         if command == "init":
