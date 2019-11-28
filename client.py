@@ -29,21 +29,34 @@ def initialize():
 
 @app.route('/file_create', methods=['POST', 'GET'])
 def file_create():
-    name = request.form.getlist('filename')[0]
-    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "init", "args": {"username": name}}).text)
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "file_create", "args": {"username": name, "path": filename}}).text)
     return render_template("file_create.html", result=response)
 
 
-def file_read(self, filepath):
-    return
+@app.route('/file_download', methods=['POST', 'GET'])
+def file_download():
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    response = json.loads(
+        requests.get('http://10.1.1.141:1337',
+                     json={"command": "", "args": {"username": name, "path": filename}}).text)
+    return render_template("file_download.html", result=response)
 
 
 def file_write(self, filepath):
     return
 
 
+@app.route('/file_delete', methods=['POST', 'GET'])
 def file_delete(self, filepath):
-    return
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    response = json.loads(
+        requests.get('http://10.1.1.141:1337',
+                     json={"command": "", "args": {"username": name, "path": filename}}).text)
+    return render_template("file_delete.html", result=response)
 
 
 @app.route('/file_info', methods=['POST', 'GET'])
@@ -53,7 +66,6 @@ def file_info():
     response = json.loads(
         requests.get('http://10.1.1.141:1337',
                      json={"command": "file_info", "args": {"username": name, "path": filename}}).text)
-    print(response)
     return render_template("file_info.html", result=response)
 
 
@@ -71,9 +83,9 @@ def log_in():
     global current_user
     current_user = name
     response = json.loads(
-        requests.get('http://10.1.1.141:1337', json={"command": "listdir", "args": {"username": name, "path": "/"}}).text)
+        requests.get('http://10.1.1.167:1338', json={"command": "list_dir", "args": {"username": name, "path": "/"}}).text)
     print(response)
-    return render_template("filesystem.html", result=response)
+    return render_template("filesystem.html", result=response, name=current_user)
 
 
 def open_directory():

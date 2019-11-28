@@ -23,7 +23,8 @@
     </tr>
 </table>
 
-Your files:
+{{ name }}'s files:<br>
+{{ result}}
 <table>
     <tr>
         <td>
@@ -31,14 +32,10 @@ Your files:
         </td>
         <td></td>
         <td></td>
+        <td></td>
         <td>
             <form action="http://localhost:5000/">
                 <input type="submit" value="Open"/>
-            </form>
-        </td>
-        <td>
-            <form action="http://localhost:5000/">
-                <input type="submit" value="Read"/>
             </form>
         </td>
         <td>
@@ -59,6 +56,11 @@ Your files:
         </td>
         <td>
             <form action="http://localhost:5000/">
+                <input type="text" name="filename"/><input type="submit" value="Download"/>
+            </form>
+        </td>
+        <td>
+            <form action="http://localhost:5000/">
                 <input type="submit" value="Move"/>
             </form>
         </td>
@@ -69,12 +71,7 @@ Your files:
         </td>
         <td>
             <form action="http://localhost:5000/">
-                <input type="submit" value="Read"/>
-            </form>
-        </td>
-        <td>
-            <form action="http://localhost:5000/">
-                <input type="submit" value="Delete"/>
+                <input type="text" name="filename"/><input type="submit" value="Delete"/>
             </form>
         </td>
     </tr>
