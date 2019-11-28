@@ -25,6 +25,44 @@ def init_db(message):
     return json.dumps(response)
 
 
+def find_create(paths, username):
+    fileID = 0
+    try:
+        if len(paths) == 3:
+            q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+            fileID = db.query(q)[0][0]
+            q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+            fileID = db.query(q)[0][0]
+        elif len(paths) > 3:
+            q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+            fileID = db.query(q)[0][0]
+            for p in range(2, len(paths) - 1):
+                query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                        % (str(fileID), paths[p])
+                fileID = db.query(query)[0][0]
+    except Exception:
+        print("Error during query execution")
+    return fileID
+
+
+def find(paths, username):
+    fileID = 0
+    try:
+        if len(paths) == 3:
+            q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+            fileID = db.query(q)[0][0]
+        elif len(paths) > 3:
+            q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
+            fileID = db.query(q)[0][0]
+            for p in range(2, len(paths)):
+                query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                        % (str(fileID), paths[p])
+                fileID = db.query(query)[0][0]
+    except Exception:
+        print("Error during query execution")
+    return fileID
+
+
 def create_dir(message):
     path = message["args"]["path"]
     username = message["args"]["username"]
@@ -32,25 +70,62 @@ def create_dir(message):
     data = json.loads(requests.get(server_ip, json=message).text)
     if data["status"] == "success":
         try:
-            if len(paths) == 3:
-                q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
-                fid = db.query(q)[0][0]
-                print(fid)
-                query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Folders { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
-                        % (str(fid), paths[2])
-                db.query(query)
-            elif len(paths) > 3:
-                q = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" % (username, paths[1])
-                fid = db.query(q)[0][0]
-                for p in range(2, len(paths) - 1):
-                    query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
-                            % (str(fid), paths[p])
-                    fid = db.query(query)[0][0]
+            if len(paths) > 2:
+                fid = find_create(paths, username)
                 query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Folders { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
                         % (str(fid), paths[-1])
                 db.query(query)
             else:
                 query = "MATCH (s:Users) WHERE s.name = \"%s\" CREATE (n:Folders { name: \'%s\'}) " \
+                        "CREATE (s)-[r:own]->(n)" % (username, paths[1])
+                db.query(query)
+        except Exception:
+            data = {"status": "error", "message": "Error during query execution"}
+    return json.dumps(data)
+
+
+def list_dir(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    if len(paths) > 2:
+        fid = find(paths, username)
+        query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r]->(f) RETURN {name: f.name, label: labels(f)}" % str(fid)
+        res = db.query(query)
+    else:
+        query = "MATCH (s:Users) WHERE s.name = \"%s\" MATCH (s)-[r]->(f) RETURN {name: f.name, label: labels(f)}" \
+                % username
+        res = db.query(query)
+    lis = []
+    for r in res:
+        ll = r[0]['label'][0]
+        if ll == "Folders":
+            ll = 'dir'
+        elif ll == "Files":
+            ll = 'file'
+        lis.append((r[0]['name'], ll))
+    data = {
+        "status": "OK",
+        "message": "Directory listed",
+        "names": lis
+    }
+    return json.dumps(data)
+
+
+def file_create(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    data = json.loads(requests.get(server_ip, json=message).text)
+    if data["status"] == "success":
+        try:
+            if len(paths) > 2:
+                fid = find_create(paths, username)
+                query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Files { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
+                        % (str(fid), paths[-1])
+                db.query(query)
+            else:
+                query = "MATCH (s:Users) WHERE s.name = \"%s\" CREATE (n:Files { name: \'%s\'}) " \
                         "CREATE (s)-[r:own]->(n)" % (username, paths[1])
                 db.query(query)
         except Exception:
@@ -78,6 +153,10 @@ class Server(BaseHTTPRequestHandler):
             data_json = init_db(message)
         elif message["command"] == "create_dir":
             data_json = create_dir(message)
+        elif message["command"] == "list_dir":
+            data_json = list_dir(message)
+        elif message["command"] == "file_create":
+            data_json = file_create(message)
         else:
             data_json = json.dumps({
                 "status": "error",
