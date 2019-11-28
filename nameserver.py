@@ -11,6 +11,8 @@ user = db.labels.create("Users")
 folder = db.labels.create("Folders")
 file = db.labels.create("Files")
 server_ip = 'http://10.1.1.141:1337'
+ftp_ip = "10.1.1.141"
+port = 7331
 
 
 def init_db(message):
@@ -109,6 +111,35 @@ def list_dir(message):
         "message": "Directory listed",
         "names": lis
     }
+    return json.dumps(data)
+
+
+def delete_dir(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    data = json.loads(requests.get(server_ip, json=message).text)
+    if data["status"] == "success":
+        try:
+            if len(paths) > 1:
+                fid = find(paths, username)
+                query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r *1..]->(f) DETACH DELETE f, s" % str(fid)
+                db.query(query)
+                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
+                        % str(fid)
+                db.query(query)
+                print(fid)
+            else:
+                query = "MATCH (u:Users { name:\"%s\" })-[r]->(f) WHERE f.name = \'%s\' RETURN ID(f)" \
+                        % (username, paths[-1])
+                fid = db.query(query)[0][0]
+                query = "MATCH (s) WHERE ID(s) = %s MATCH (s)-[r *1..]->(f) DETACH DELETE f, s" % str(fid)
+                db.query(query)
+                query = "MATCH (s) WHERE ID(s) = %s DETACH DELETE s" \
+                        % str(fid)
+                db.query(query)
+        except Exception:
+            data = {"status": "error", "message": "Error during query execution"}
     return json.dumps(data)
 
 
@@ -217,6 +248,53 @@ def new_user(username):
     user.add(u1)
 
 
+def file_upload(message):
+    data = {
+        "status": "OK",
+        "message": "Successfully initialized upload",
+        "args": {
+            "ip": ftp_ip,
+            "port": port
+        }
+    }
+    return json.dumps(data)
+
+
+def file_download(message):
+    data = {
+        "status": "OK",
+        "message": "Successfully initialized download",
+        "args": {
+            "ip": ftp_ip,
+            "port": port
+        }
+    }
+    return json.dumps(data)
+
+
+def verify_upload(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    paths = path.split('/')
+    try:
+        if len(paths) > 2:
+            fid = find_create(paths, username)
+            query = "MATCH (s) WHERE ID(s) = %s CREATE (n:Files { name: \'%s\'}) CREATE (s)-[r:store]->(n)" \
+                    % (str(fid), paths[-1])
+            db.query(query)
+        else:
+            query = "MATCH (s:Users) WHERE s.name = \"%s\" CREATE (n:Files { name: \'%s\'}) " \
+                    "CREATE (s)-[r:own]->(n)" % (username, paths[1])
+            db.query(query)
+    except Exception:
+        print("Error during query execution")
+    data = {
+        "status": "OK",
+        "message": "Successfully created file",
+    }
+    return json.dumps(data)
+
+
 def json_handler(content):
     obj = json.loads(content.decode("utf-8"))
     return obj
@@ -246,7 +324,15 @@ class Server(BaseHTTPRequestHandler):
         elif message["command"] == "file_move":
             data_json = file_move(message)
         elif message["command"] == "delete_dir":
-            data_json = file_delete(message)
+            data_json = delete_dir(message)
+        elif message["command"] == "file_upload":
+            data_json = file_upload(message)
+        elif message["command"] == "file_download":
+            data_json = file_download(message)
+        elif message["command"] == "file_download":
+            data_json = file_download(message)
+        elif message["command"] == "verify_upload":
+            data_json = verify_upload(message)
         else:
             data_json = json.dumps({
                 "status": "error",
