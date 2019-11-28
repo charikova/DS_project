@@ -52,7 +52,6 @@ def file_copy(self, filepath, dest_filepath):
 def file_move(self, filepath, dest_filepath):
     return
 
-
 def open_directory(self, filepath):
     return
 
@@ -69,10 +68,6 @@ def directory_create():
 
 
 def delete_directory(self, filepath):
-    return
-
-
-def client_run(self):
     return
 
 
