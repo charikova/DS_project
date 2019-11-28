@@ -24,7 +24,8 @@
 </table>
 
 {{ name }}'s files:<br>
-{{ result}}
+Directory: {{ directory }}<br>
+{{ result }}
 <table>
     <tr>
         <td>
@@ -34,7 +35,7 @@
         <td></td>
         <td></td>
         <td>
-            <form action="http://localhost:5000/filesystem_dir" method="POST">
+            <form action="http://localhost:5000/filesystem_dir">
                 <input type="text" name="dirname"/><input type="submit" value="Open"/></p>
             </form>
         </td>

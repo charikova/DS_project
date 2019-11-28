@@ -23,7 +23,8 @@ def start():
 @app.route('/initialize', methods=['POST', 'GET'])
 def initialize():
     name = request.form.getlist('username')[0]
-    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "init", "args": {"username": name}}).text)
+    response = json.loads(
+        requests.get('http://13.59.57.151:8589', json={"command": "init", "args": {"username": name}}).text)
     return render_template("initialize.html", result=response)
 
 
@@ -31,7 +32,9 @@ def initialize():
 def file_create():
     name = current_user
     filename = request.form.getlist('filename')[0]
-    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "file_create", "args": {"username": name, "path": filename}}).text)
+    response = json.loads(requests.get('http://13.59.57.151:8589', json={"command": "file_create",
+                                                                         "args": {"username": name,
+                                                                                  "path": filename}}).text)
     return render_template("file_create.html", result=response)
 
 
@@ -79,23 +82,37 @@ def file_move(self, filepath, dest_filepath):
 
 @app.route('/filesystem', methods=['POST', 'GET'])
 def log_in():
-    name = request.form.getlist('username')[0]
     global current_user
+    global path
+    name = current_user
+    name = request.form.getlist('name')[0]
     current_user = name
+    path += ''
     response = json.loads(
-        requests.get('http://10.1.1.167:1338', json={"command": "list_dir", "args": {"username": name, "path": "/"}}).text)
-    print(response)
+        requests.get('http://10.1.1.167:1338',
+                     json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
     return render_template("filesystem.html", result=response, name=current_user)
 
 
+@app.route('/filesystem_dir', methods=['POST', 'GET'])
 def open_directory():
-    return
+    global current_user
+    global path
+    name = current_user
+    dirname = request.form.getlist('dirname')[0]
+    path += '/'
+    path += dirname
+    response = json.loads(
+        requests.get('http://10.1.1.167:1338',
+                     json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
+    return render_template("filesystem_dir.html", result=response, name=current_user, directory=dirname)
 
 
 @app.route('/directory_create', methods=['POST', 'GET'])
 def directory_create():
     name = request.form.getlist('dirname')[0]
-    response = json.loads(requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
+    response = json.loads(
+        requests.get('http://10.1.1.141:1337', json={"command": "init", "args": {"username": name}}).text)
     return render_template("directory_create.html", result=response)
 
 
@@ -103,6 +120,8 @@ def delete_directory(self, filepath):
     return
 
 
+current_user = ''
+path = ''
 
 if __name__ == '__main__':
     app.run(debug=True)
