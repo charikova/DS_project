@@ -25,6 +25,12 @@
 
 {{ name }}'s files:<br>
 Directory: {{ directory }}
+<form action="http://localhost:5000/filesystem" method="POST">
+    <button name="name" value={{ name }}>Go to main page</button>
+</form>
+<form action="http://localhost:5000/">
+    <input type="submit" value="Log out"/>
+</form>
 
 <table>
     {% for file in result %}
