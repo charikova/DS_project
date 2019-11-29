@@ -1,4 +1,6 @@
+import random
 import shutil
+import threading
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
@@ -16,6 +18,8 @@ leader_ip = ""
 nameserver_ip = "10.1.1.167"
 nameserver_port = 1338
 replicas = []
+beat = 0
+last_beat = 0
 
 
 def verify_path(message):
@@ -152,9 +156,11 @@ def file_create(message):
     data = {}
     root_directory = message["args"]["username"]
     path = message["args"]["path"]
-
-    if not verify_path(message):
-        os.system('touch ' + root_directory + path)
+    full_path = root_directory + path
+    ind = full_path.rfind("/")
+    path_no_file = full_path[:ind] + "/"
+    if not verify_path(message) and os.path.exists(path_no_file):
+        os.system('touch ' + full_path)
         data = {"status": "success", "message": "file created"}
     else:
         data = {"status": "error", "message": "file with this name already exists"}
@@ -246,11 +252,10 @@ def file_download(message):
 def replicate_uploaded(message):
     path = message["args"]["path"]
     username = message["args"]["username"]
-    replicated_upload = {"command": message["command"], "args": {"username": username, "path": path}}
     for node in replicas:
         try:
             response = json.loads(
-                requests.get('http://' + node + ':' + str(PORT_http), json=replicated_upload, timeout=1).text)
+                requests.get('http://' + node + ':' + str(PORT_http), json=message, timeout=1).text)
         except requests.exceptions.ReadTimeout:
             s = socket.socket()  # Create a socket object
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -267,6 +272,7 @@ def replicate_uploaded(message):
             response = "file replicated"
         except requests.exceptions.ConnectionError:
             response = "node dead"
+        print(response)
 
 
 def start_replicated_upload(message):
@@ -370,17 +376,14 @@ def request_fs():
     message = {"command": "send_fs", "args": {"ip": node_ip}}
     try:
         response = json.loads(
-            requests.get('http://' + leader_ip + ':' + str(PORT_http), json=message, timeout=1).text)
+            requests.get('http://' + leader_ip + ':' + str(PORT_http), json=message, timeout=0.000001).text)
     except requests.exceptions.ReadTimeout:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         host = ""
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
         s.bind((host, PORT_ftp_send))
-
         s.listen(5)
         conn, addr = s.accept()
-
         with open('bckp.zip', 'wb') as f:
             while True:
                 data = conn.recv(1024)
@@ -404,7 +407,6 @@ def send_fs(message):
     os.system("zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\"")
     s = socket.socket()  # Create a socket object
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    print(node)
     s.connect((node, PORT_ftp_send))
 
     filepath = 'bckp.zip'
@@ -419,6 +421,11 @@ def send_fs(message):
     return json.dumps({"status": "ok"})
 
 
+def renew_beat():
+    global beat
+    beat = time.time()
+
+
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         content_length = int(self.headers['Content-Length'])
@@ -427,7 +434,8 @@ class Server(BaseHTTPRequestHandler):
         data_json = json.dumps('{}')
         print(message)
         command = message["command"]
-        if leader_ip == node_ip and command != "file_upload" and command != "file_download" and command != "send_fs":
+        if leader_ip == node_ip and command != "file_upload" and command != "file_download" \
+                and command != "send_fs" and command != "beat":
             commit_to_replicas(message)
         if command == "init":
             data_json = init_dir(message)
@@ -454,6 +462,8 @@ class Server(BaseHTTPRequestHandler):
             start_replicated_upload(message)
         elif command == "send_fs":
             data_json = send_fs(message)
+        elif command == "beat":
+            renew_beat()
         else:
             data_json = json.dumps({"status": "error", "message": "unknown command"})
 
@@ -466,6 +476,41 @@ class Server(BaseHTTPRequestHandler):
         content = self.rfile.read(content_length)
 
 
+class HeartBeatLeader(object):
+    def __init__(self, interval=2):
+        self.interval = interval
+
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True
+        thread.start()
+
+    def run(self):
+        while True:
+            message = {"command": "beat"}
+            for node in replicas:
+                try:
+                    response = json.loads(
+                        requests.get('http://' + node + ':' + str(PORT_http), json=message, timeout=1).text)
+                except requests.exceptions.ReadTimeout:
+                    response = "node dead"
+                except requests.exceptions.ConnectionError:
+                    response = "node dead"
+                print(response)
+
+
+class HeartBeatFollower(object):
+    def __init__(self, interval=1):
+        self.interval = interval
+
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True
+        thread.start()
+
+    def run(self):
+        if beat - last_beat > 5:
+            print("leader ded")
+
+
 if __name__ == "__main__":
     server_address = ('', PORT_http)
     httpd = HTTPServer(server_address, Server)
@@ -476,5 +521,9 @@ if __name__ == "__main__":
     if leader_ip == node_ip:
         time.sleep(2)
         get_replicas_list()
+        hbeat = HeartBeatLeader()
+    else:
+        hbeat = HeartBeatFollower()
+
     print(f"Starting server on localhost:", PORT_http)
     httpd.serve_forever()
