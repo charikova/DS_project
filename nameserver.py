@@ -2,8 +2,15 @@ from neo4jrestclient import client
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import requests
+import threading
+import time
+import os
 
-db = client.GraphDatabase("http://localhost:7474", username="DFSnameserver", password="123")
+time.sleep(15)
+neo4j_ip = os.environ.get('neo4j_host')
+print(neo4j_ip)
+neofull = 'http://' + neo4j_ip + ':7474'
+db = client.GraphDatabase(neofull, username="DFSnameserver", password="123")
 user_relation_label = "own"
 folders_relation_label = "store"
 PORT = 1338
@@ -14,6 +21,9 @@ servers = []
 server_ip = ''
 leader_ip = ''
 port = 7331
+leader_alive = False
+beat = 0
+last_beat = 0
 
 
 def init_db(message):
@@ -298,29 +308,58 @@ def verify_upload(message):
 
 def new_node(message):
     ip = message["args"]["ip"]
-    servers.append(ip)
-    global leader_ip, server_ip
+    global leader_ip, server_ip, leader_alive
     data = {}
+    query = "match (n) return count(n) as count"
+    res = db.query(query)[0][0]
+    status = ''
+    if res == 0:
+        status = 'new'
+        if ip not in servers:
+            servers.append(ip)
+    else:
+        status = 'old'
     if len(servers) == 1:
+        leader_alive = True
         leader_ip = ip
         server_ip = 'http://' + ip + ':1337'
         data = {
             "status": "leader",
             "args": {
-                "ip": ip
+                "status": status,
+                "ip": leader_ip
             }
         }
     else:
         data = {
             "status": "not_leader",
             "args": {
+                "status": status,
                 "ip": leader_ip
             }
         }
     return json.dumps(data)
 
 
-
+def change_leader(message):
+    global leader_ip, server_ip, leader_alive
+    data = {}
+    if not leader_alive:
+        print("ХАВАЮ ПИСЬКИ")
+        new_ip = message["args"]["ip"]
+        leader_alive = True
+        leader_ip = new_ip
+        server_ip = 'http://' + new_ip + ':1337'
+        data = {
+            "status": "OK",
+            "message": "Leader successfully changed"
+        }
+    else:
+        data = {
+            "status": "ERROR",
+            "message": "Leader already alive"
+        }
+    return json.dumps(data)
 
 
 def servers_ip(message):
@@ -338,13 +377,22 @@ def json_handler(content):
     return obj
 
 
+def rec_beat():
+    global last_beat, leader_alive
+    leader_alive = True
+    last_beat = time.time()
+
+
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         content_length = int(self.headers['Content-Length'])
         content = self.rfile.read(content_length)
+        global leader_alive
         message = json_handler(content)
         print(message)
         data_json = json.dumps('{}')
+        print(leader_ip)
+        print(leader_alive)
         if message["command"] == "init":
             data_json = init_db(message)
         elif message["command"] == "create_dir":
@@ -375,6 +423,11 @@ class Server(BaseHTTPRequestHandler):
             data_json = servers_ip(message)
         elif message["command"] == "new_node":
             data_json = new_node(message)
+        elif message["command"] == "change_leader":
+            data_json = change_leader(message)
+        elif message["command"] == "beat":
+            data_json = json.dumps({"status": "OK"})
+            rec_beat()
         else:
             data_json = json.dumps({
                 "status": "error",
@@ -391,7 +444,27 @@ class Server(BaseHTTPRequestHandler):
         json_handler(content)
 
 
+class HeartBeatFollower(object):
+    def __init__(self, interval=2):
+        self.interval = interval
+
+        thread = threading.Thread(target=self.run, args=())
+        thread.daemon = True
+        thread.start()
+
+    def run(self):
+        global beat, leader_alive
+        global last_beat
+        time.sleep(5)
+        while True:
+            beat = time.time()
+            if beat - last_beat > 5:
+                # print("Leader ded")
+                leader_alive = False
+
+
 if __name__ == "__main__":
+    hbeat = HeartBeatFollower()
     server_address = ("", PORT)
     httpd = HTTPServer(server_address, Server)
 
