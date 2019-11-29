@@ -10,6 +10,8 @@ import requests
 
 PORT_http = 1337
 PORT_ftp_send = 7331
+node_ip = "10.1.1.141"
+leader_ip = ""
 
 
 def verify_path(message):
@@ -280,6 +282,18 @@ def file_upload(message):
     return data_json
 
 
+def initialize_node():
+    global leader_ip
+    command = {"command": "new_node", "args": {"ip": node_ip}}
+    response = json.loads(requests.get('http://' + "10.1.1.167" + ':' + str(1338), json=command, timeout=0.000001).text)
+    if response["status"] == "leader":
+        print("cool")
+        leader_ip = node_ip
+    else:
+        leader_ip = response["args"]["leader_ip"]
+        print(response["args"]["leader_ip"])
+
+
 class Server(BaseHTTPRequestHandler):
     def do_GET(self):
         content_length = int(self.headers['Content-Length'])
@@ -326,6 +340,6 @@ class Server(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     server_address = ('', PORT_http)
     httpd = HTTPServer(server_address, Server)
-
+    initialize_node()
     print(f"Starting server on localhost:", PORT_http)
     httpd.serve_forever()
