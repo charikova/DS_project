@@ -1,4 +1,5 @@
 import shutil
+import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import json
 import os
@@ -12,6 +13,9 @@ PORT_http = 1337
 PORT_ftp_send = 7331
 node_ip = "10.1.1.141"
 leader_ip = ""
+nameserver_ip = "10.1.1.167"
+nameserver_port = 1338
+replicas = []
 
 
 def verify_path(message):
@@ -213,7 +217,6 @@ def start_download(message):
     s.listen(5)  # Now wait for client connection.
 
     conn, addr = s.accept()  # Establish connection with client.
-
     if os.path.exists(root_directory + path):
         f = open(root_directory + path, 'rb')
         l = f.read(1024)
@@ -240,18 +243,53 @@ def file_download(message):
     return data_json
 
 
+def replicate_uploaded(message):
+    path = message["args"]["path"]
+    username = message["args"]["username"]
+    replicated_upload = {"command": message["command"], "args": {"username": username, "path": path}}
+    print(replicated_upload)
+    for node in replicas:
+        try:
+            response = json.loads(
+                requests.get('http://' + node + ':' + str(PORT_http), json=replicated_upload, timeout=1).text)
+        except requests.exceptions.ReadTimeout:
+            s = socket.socket()  # Create a socket object
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.connect((node, PORT_ftp_send))
+
+            filepath = username + path
+            f = open(filepath, 'rb')
+            l = f.read(1024)
+            while (l):
+                s.send(l)
+                l = f.read(1024)
+            f.close()
+            s.close()
+        except requests.exceptions.ConnectionError:
+            response = "node dead"
+        print(response)
+
+
+def start_replicated_upload(message):
+    p = Process(target=replicate_uploaded(message))
+    p.start()
+    data = {"status": "success", "message": "download in progress"}
+    data_json = json.dumps(data)
+    return data_json
+
+
 def start_upload(message):
     root_directory = message["args"]["username"]
     path = message["args"]["path"]
     filename = root_directory + path
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    host = "10.1.1.141"
+    host = ""
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     s.bind((host, PORT_ftp_send))
 
-    s.listen()
+    s.listen(5)
     conn, addr = s.accept()
 
     with open('{}'.format(filename), 'wb') as f:
@@ -266,11 +304,12 @@ def start_upload(message):
     print('Successfully get the file')
     conn.close()
     s.close()
-    command = {"command": "verify_upload", "args": {"username": root_directory, "path": path}}
-    try:
-        requests.get('http://' + "10.1.1.167" + ':' + str(1338), json=command, timeout=0.000001)
-    except requests.exceptions.ReadTimeout:
-        pass
+    if node_ip == leader_ip:
+        command = {"command": "verify_upload", "args": {"username": root_directory, "path": path}}
+        try:
+            requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=command, timeout=0.000001)
+        except requests.exceptions.ReadTimeout:
+            pass
     print('connection closed')
 
 
@@ -285,13 +324,34 @@ def file_upload(message):
 def initialize_node():
     global leader_ip
     command = {"command": "new_node", "args": {"ip": node_ip}}
-    response = json.loads(requests.get('http://' + "10.1.1.167" + ':' + str(1338), json=command, timeout=0.000001).text)
+    response = json.loads(requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=command).text)
     if response["status"] == "leader":
-        print("cool")
         leader_ip = node_ip
     else:
-        leader_ip = response["args"]["leader_ip"]
-        print(response["args"]["leader_ip"])
+        leader_ip = response["args"]["ip"]
+
+
+def get_replicas_list():
+    global replicas
+    command = {"command": "servers"}
+    response = json.loads(
+        requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=command).text)
+    replicas = response["args"]["ips"]
+    if node_ip in replicas:
+        replicas.remove(node_ip)
+    print(replicas)
+
+
+def commit_to_replicas(message):
+    for node in replicas:
+        try:
+            response = json.loads(
+                requests.get('http://' + node + ':' + str(PORT_http), json=message, timeout=1).text)
+        except requests.exceptions.ReadTimeout:
+            response = "node dead"
+        except requests.exceptions.ConnectionError:
+            response = "node dead"
+        print(response)
 
 
 class Server(BaseHTTPRequestHandler):
@@ -302,7 +362,8 @@ class Server(BaseHTTPRequestHandler):
         data_json = json.dumps('{}')
         print(message)
         command = message["command"]
-
+        if leader_ip == node_ip and command != "file_upload" and command != "file_download":
+            commit_to_replicas(message)
         if command == "init":
             data_json = init_dir(message)
         elif command == "create_dir":
@@ -325,6 +386,7 @@ class Server(BaseHTTPRequestHandler):
             data_json = file_download(message)
         elif command == "file_upload":
             data_json = file_upload(message)
+            start_replicated_upload(message)
         else:
             data_json = json.dumps({"status": "error", "message": "unknown command"})
 
@@ -341,5 +403,8 @@ if __name__ == "__main__":
     server_address = ('', PORT_http)
     httpd = HTTPServer(server_address, Server)
     initialize_node()
+    if leader_ip == node_ip:
+        time.sleep(2)
+        get_replicas_list()
     print(f"Starting server on localhost:", PORT_http)
     httpd.serve_forever()
