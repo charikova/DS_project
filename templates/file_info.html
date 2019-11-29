@@ -1,9 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>File_info</title>
-</head>
+<!doctype html>
+<html>
 <body>
 <table border=0>
     <tr>
@@ -11,10 +7,8 @@
     </tr>
     <tr>
         <td>
-    <tr>
-        <td>
-            <form action="http://localhost:5000/">
-                <input type="submit" value="Go to main page"/>
+            <form action="http://localhost:5000/filesystem" method="POST">
+                <button name="name" value={{ user }}>Go to main page</button>
             </form>
         </td>
     </tr>

@@ -26,7 +26,7 @@ def initialize():
     name = request.form.getlist('username')[0]
     response = json.loads(
         requests.get('http://18.222.226.202:1338', json={"command": "init", "args": {"username": name}}).text)
-    return render_template("initialize.html", result=response)
+    return render_template("initialize.html", result=response, user=name)
 
 
 @app.route('/file_create', methods=['POST', 'GET'])
@@ -39,14 +39,13 @@ def file_create():
     response = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_create",
                                                                          "args": {"username": name,
                                                                                   "path": path}}).text)
-    return render_template("file_create.html", result=response)
+    return render_template("file_create.html", result=response, user=name)
 
 
 @app.route('/file_download', methods=['POST', 'GET'])
 def file_download():
     name = current_user
     filename = request.form.getlist('filename')[0]
-    print(filename)
     global path
     path += '/'
     path += filename
@@ -57,7 +56,6 @@ def file_download():
     host = args['ip']
     port = args['port']
     s = socket.socket()
-    print(path)
     command = {"command": "file_download",
                "args": {
                    "username": name,
@@ -65,22 +63,20 @@ def file_download():
                }
                }
     try:
-        requests.get('http://' + str(host) + ':' + str(1337), json=command, timeout=0.000001)
+        requests.get('http://' + str(host) + ':' + str(1337), json=command, timeout=1)
     except requests.exceptions.ReadTimeout:
         pass
     s.connect((host, port))
-    print('a')
     filename = command["args"]["path"].split("/")[-1]
     with open('{}'.format(filename), 'wb') as f:
         while True:
-            print('receiving data...')
             data = s.recv(1024)
             if not data:
                 break
             f.write(data)
     f.close()
     s.close()
-    return render_template("file_download.html", result=host)
+    return render_template("file_download.html", result=host, user=name)
 
 
 @app.route('/file_upload', methods=['POST', 'GET'])
@@ -106,7 +102,7 @@ def file_upload():
                }
                }
     try:
-        requests.get('http://' + host + ':' + str(1337), json=command, timeout=0.000001)
+        requests.get('http://' + host + ':' + str(1337), json=command, timeout=1)
     except requests.exceptions.ReadTimeout:
         pass
     s.connect((host, 7331))
@@ -118,7 +114,7 @@ def file_upload():
         l = f.read(1024)
     f.close()
     s.close()
-    return render_template("file_upload.html", result=host)
+    return render_template("file_upload.html", result=host, user=name)
 
 
 @app.route('/file_delete', methods=['POST', 'GET'])
@@ -132,7 +128,7 @@ def file_delete():
         requests.get('http://18.222.226.202:1338',
                      json={"command": "file_delete", "args": {"username": name, "path": path}}).text)
 
-    return render_template("file_delete.html", result=response)
+    return render_template("file_delete.html", result=response, user=name)
 
 
 @app.route('/file_info', methods=['POST', 'GET'])
@@ -146,7 +142,7 @@ def file_info():
     response = json.loads(
         requests.get('http://18.222.226.202:1338',
                      json={"command": "file_info", "args": {"username": name, "path": path}}).text)
-    return render_template("file_info.html", result=response)
+    return render_template("file_info.html", result=response, user=name)
 
 
 @app.route('/file_copy', methods=['POST', 'GET'])
@@ -159,7 +155,7 @@ def file_copy():
     response = json.loads(
         requests.get('http://18.222.226.202:1338',
                      json={"command": "file_copy", "args": {"username": name, "path": path}}).text)
-    return render_template("file_copy.html", result=response)
+    return render_template("file_copy.html", result=response, user=name)
 
 
 @app.route('/file_move', methods=['POST', 'GET'])
@@ -173,7 +169,7 @@ def file_move():
     response = json.loads(
         requests.get('http://18.222.226.202:1338',
                      json={"command": "file_move", "args": {"username": name, "src_path": path, "dst_path": path_to_move}}).text)
-    return render_template("file_copy.html", result=response)
+    return render_template("file_copy.html", result=response, user=name)
 
 
 @app.route('/filesystem', methods=['POST', 'GET'])
@@ -204,7 +200,7 @@ def open_directory():
         requests.get('http://18.222.226.202:1338',
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
     files = response['names']
-    return render_template("filesystem_dir.html", result=files, name=current_user, directory=dirname)
+    return render_template("filesystem_dir.html", result=files, name=current_user, directory=path)
 
 
 @app.route('/directory_create', methods=['POST', 'GET'])
@@ -216,7 +212,7 @@ def directory_create():
     path += name
     response = json.loads(
         requests.get('http://18.222.226.202:1338', json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
-    return render_template("directory_create.html", result=response)
+    return render_template("directory_create.html", result=response, user=current_user)
 
 
 @app.route('/dir_delete', methods=['POST', 'GET'])
@@ -230,7 +226,7 @@ def delete_directory():
         requests.get('http://18.222.226.202:1338',
                      json={"command": "delete_dir", "args": {"username": name, "path": path}}).text)
 
-    return render_template("dir_delete.html", result=response)
+    return render_template("dir_delete.html", result=response, user=name)
 
 
 current_user = ''
