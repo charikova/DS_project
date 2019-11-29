@@ -25,6 +25,9 @@
 
 {{ name }}'s files:<br>
 Directory: {{ directory }}
+<form>
+    <input type="button" value="Previous page" onClick='javascript:history.back();'>
+</form>
 <form action="http://localhost:5000/filesystem" method="POST">
     <button name="name" value={{ name }}>Go to main page</button>
 </form>
