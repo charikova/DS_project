@@ -13,7 +13,7 @@ import requests
 
 PORT_http = 1337
 PORT_ftp_send = 7331
-node_ip = "10.1.1.129"
+node_ip = "10.1.1.141"
 leader_ip = ""
 nameserver_ip = "10.1.1.167"
 nameserver_port = 1338
@@ -291,7 +291,8 @@ def start_upload(message):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     host = ""
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
+    print(leader_ip)
+    print(replicas)
     s.bind((host, PORT_ftp_send))
 
     s.listen(5)
@@ -346,10 +347,10 @@ def get_replicas_list():
     command = {"command": "servers"}
     response = json.loads(
         requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=command).text)
-    replicas = response["args"]["ips"]
-    if node_ip in replicas:
-        replicas.remove(node_ip)
-    print(replicas)
+    replicas_new = response["args"]["ips"]
+    for node in replicas_new:
+        if node not in replicas and node != node_ip:
+            replicas.append(node)
 
 
 def commit_to_replicas(message):
@@ -442,6 +443,7 @@ class Server(BaseHTTPRequestHandler):
         if leader_ip == node_ip and command != "file_upload" and command != "file_download" \
                 and command != "send_fs" and command != "beat":
             commit_to_replicas(message)
+            print("commited")
         if command == "init":
             data_json = init_dir(message)
         elif command == "create_dir":
@@ -463,6 +465,7 @@ class Server(BaseHTTPRequestHandler):
         elif command == "file_download":
             data_json = file_download(message)
         elif command == "file_upload":
+            print("s")
             data_json = file_upload(message)
             start_replicated_upload(message)
         elif command == "send_fs":
@@ -493,6 +496,9 @@ class HeartBeatLeader(object):
 
     def run(self):
         while True:
+            get_replicas_list()
+            if node_ip != leader_ip:
+                break
             message = {"command": "beat"}
             try:
                 requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=message, timeout=1)
@@ -523,12 +529,13 @@ class HeartBeatFollower(object):
         global beat
         global last_beat
         global leader_ip
-        time.sleep(5)
+        global node_ip
+        time.sleep(2)
         while True:
             beat = time.time()
-            if beat - last_beat > 2:
+            if beat - last_beat > 5:
                 print("leader ded")
-
+                time.sleep(random.uniform(0.1, 1.9))
                 message = {"command": "change_leader", "args": {"ip": node_ip}}
                 response = json.loads(
                     requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=message, timeout=1).text)
@@ -550,7 +557,6 @@ if __name__ == "__main__":
         os.system("rm -r */")
         request_fs()
     if leader_ip == node_ip:
-        time.sleep(2)
         get_replicas_list()
         hbeat = HeartBeatLeader()
     else:
