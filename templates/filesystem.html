@@ -24,11 +24,14 @@
 </table>
 
 {{ name }}'s files:<br>
-{{ result}}
+
+
 <table>
+    {% for file in result %}
+    {% if file[1] == 'dir' %}
     <tr>
         <td>
-            Directory name
+            {{ file[0] }}
         </td>
         <td></td>
         <td></td>
@@ -46,9 +49,11 @@
         </td>
 
     </tr>
+    {% endif %}
+    {% if file[1] == 'file' %}
     <tr>
         <td>
-            Filename
+            {{ file[0] }}
         </td>
         <td>
             <form action="http://localhost:5000/file_info" method="POST">
@@ -81,6 +86,8 @@
             </form>
         </td>
     </tr>
+    {% endif %}
+    {% endfor %}
 </table>
 </body>
 </html>

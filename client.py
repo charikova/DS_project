@@ -25,7 +25,7 @@ def start():
 def initialize():
     name = request.form.getlist('username')[0]
     response = json.loads(
-        requests.get('http://10.1.1.167:1338', json={"command": "init", "args": {"username": name}}).text)
+        requests.get('http://18.222.226.202:1338', json={"command": "init", "args": {"username": name}}).text)
     return render_template("initialize.html", result=response)
 
 
@@ -36,7 +36,7 @@ def file_create():
     global path
     path += '/'
     path += filename
-    response = json.loads(requests.get('http://10.1.1.167:1338', json={"command": "file_create",
+    response = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_create",
                                                                          "args": {"username": name,
                                                                                   "path": path}}).text)
     return render_template("file_create.html", result=response)
@@ -49,7 +49,7 @@ def file_download():
     global path
     path += '/'
     path += filename
-    host = json.loads(requests.get('http://10.1.1.167:1338', json={"command": "file_download",
+    host = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_download",
                                                                    "args": {"username": name,
                                                                             "path": path}}).text)
     args = host['args']
@@ -74,9 +74,7 @@ def file_download():
             data = s.recv(1024)
             if not data:
                 break
-            # write data to a file
             f.write(data)
-
     f.close()
     s.close()
     return render_template("file_download.html", result=host)
@@ -89,7 +87,7 @@ def file_upload():
     global path
     path += '/'
     path += filename
-    host = json.loads(requests.get('http://10.1.1.167:1338', json={"command": "file_upload",
+    host = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_upload",
                                                                    "args": {"username": name,
                                                                             "path": path}}).text)
     args = host['args']
@@ -101,7 +99,7 @@ def file_upload():
     command = {"command": "file_upload",
                "args": {
                    "username": name,
-                   "path": path + 'sosi.txt'
+                   "path": path + 'a.png'
                }
                }
     try:
@@ -109,7 +107,7 @@ def file_upload():
     except requests.exceptions.ReadTimeout:
         pass
     s.connect((host, 7331))
-    filepath = './sosi.txt'
+    filepath = './a.png'
     f = open(filepath, 'rb')
     l = f.read(1024)
     while (l):
@@ -128,7 +126,7 @@ def file_delete():
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "file_delete", "args": {"username": name, "path": path}}).text)
 
     return render_template("file_delete.html", result=response)
@@ -142,7 +140,7 @@ def file_info():
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "file_info", "args": {"username": name, "path": path}}).text)
     return render_template("file_info.html", result=response)
 
@@ -155,7 +153,7 @@ def file_copy():
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "file_copy", "args": {"username": name, "path": path}}).text)
     return render_template("file_copy.html", result=response)
 
@@ -169,7 +167,7 @@ def file_move():
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "file_move", "args": {"username": name, "src_path": path, "dst_path": path_to_move}}).text)
     return render_template("file_copy.html", result=response)
 
@@ -183,9 +181,10 @@ def log_in():
     current_user = name
     path = ''
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
-    return render_template("filesystem.html", result=response, name=current_user)
+    files = response['names']
+    return render_template("filesystem.html", result=files, name=current_user)
 
 
 @app.route('/filesystem_dir', methods=['POST', 'GET'])
@@ -197,9 +196,10 @@ def open_directory():
     path += '/'
     path += dirname
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
-    return render_template("filesystem_dir.html", result=response, name=current_user, directory=dirname)
+    files = response['names']
+    return render_template("filesystem_dir.html", result=files, name=current_user, directory=dirname)
 
 
 @app.route('/directory_create', methods=['POST', 'GET'])
@@ -210,7 +210,7 @@ def directory_create():
     path += '/'
     path += name
     response = json.loads(
-        requests.get('http://10.1.1.167:1338', json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
+        requests.get('http://18.222.226.202:1338', json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
     return render_template("directory_create.html", result=response)
 
 
@@ -224,7 +224,7 @@ def delete_directory():
     print(name)
     print(path)
     response = json.loads(
-        requests.get('http://10.1.1.167:1338',
+        requests.get('http://18.222.226.202:1338',
                      json={"command": "delete_dir", "args": {"username": name, "path": path}}).text)
 
     return render_template("dir_delete.html", result=response)
