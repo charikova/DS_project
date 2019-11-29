@@ -10,8 +10,9 @@ PORT = 1338
 user = db.labels.create("Users")
 folder = db.labels.create("Folders")
 file = db.labels.create("Files")
-server_ip = 'http://10.1.1.141:1337'
-ftp_ip = "10.1.1.141"
+servers = []
+server_ip = ''
+leader_ip = ''
 port = 7331
 
 
@@ -253,7 +254,7 @@ def file_upload(message):
         "status": "OK",
         "message": "Successfully initialized upload",
         "args": {
-            "ip": ftp_ip,
+            "ip": leader_ip,
             "port": port
         }
     }
@@ -265,7 +266,7 @@ def file_download(message):
         "status": "OK",
         "message": "Successfully initialized download",
         "args": {
-            "ip": ftp_ip,
+            "ip": leader_ip,
             "port": port
         }
     }
@@ -291,6 +292,43 @@ def verify_upload(message):
     data = {
         "status": "OK",
         "message": "Successfully created file",
+    }
+    return json.dumps(data)
+
+
+def new_node(message):
+    ip = message["args"]["ip"]
+    servers.append(ip)
+    global leader_ip, server_ip
+    data = {}
+    if len(servers) == 1:
+        leader_ip = ip
+        server_ip = 'http://' + ip + ':1337'
+        data = {
+            "status": "leader",
+            "args": {
+                "ip": ip
+            }
+        }
+    else:
+        data = {
+            "status": "not_leader",
+            "args": {
+                "ip": leader_ip
+            }
+        }
+    return json.dumps(data)
+
+
+
+
+
+def servers_ip(message):
+    data = {
+        "status": "OK",
+        "args": {
+            "ips": servers
+        }
     }
     return json.dumps(data)
 
@@ -333,6 +371,10 @@ class Server(BaseHTTPRequestHandler):
             data_json = file_download(message)
         elif message["command"] == "verify_upload":
             data_json = verify_upload(message)
+        elif message["command"] == "servers":
+            data_json = servers_ip(message)
+        elif message["command"] == "new_node":
+            data_json = new_node(message)
         else:
             data_json = json.dumps({
                 "status": "error",
