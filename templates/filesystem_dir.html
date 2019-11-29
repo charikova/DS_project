@@ -39,12 +39,12 @@ Directory: {{ directory }}
         <td></td>
         <td>
             <form action="http://localhost:5000/filesystem_dir" method="POST">
-                <input type="text" name="dirname"/><input type="submit" value="Open"/>
+                <button name="filename" value={{ file[0] }}>Open</button>
             </form>
         </td>
         <td>
             <form action="http://localhost:5000/dir_delete" method="POST">
-                <input type="text" name="filename"/><input type="submit" value="Delete"/>
+                <button name="filename" value={{ file[0] }}>Delete</button>
             </form>
         </td>
 
@@ -57,32 +57,33 @@ Directory: {{ directory }}
         </td>
         <td>
             <form action="http://localhost:5000/file_info" method="POST">
-                <input type="text" name="filename"/><input type="submit" value="Info"/>
+                <button name="filename" value={{ file[0] }}>Info</button>
             </form>
         </td>
         <td>
             <form action="http://localhost:5000/file_upload" method="POST">
-                <input type="text" name="filename"/><input type="submit" value="Upload"/>
+                <button name="filename" value={{ file[0] }}>Upload</button>
             </form>
         </td>
         <td>
             <form action="http://localhost:5000/file_download" method="POST">
-                <input type="text" name="filename"/><input type="submit" value="Download"/>
+                <button name="filename" value={{ file[0] }}>Download</button>
             </form>
         </td>
         <td>
             <form action="http://localhost:5000/file_move" method="POST">
-                <input type="text" name="filename"/><input type="text" name="path_to_move"/><input type="submit" value="Move"/>
+                <input type="text" name="path_to_move"/>
+                <button name="filename" value={{ file[0] }}>Move</button>
             </form>
         </td>
         <td>
             <form action="http://localhost:5000/file_copy" method="POST">
-                <input type="text" name="filename"/><input type="submit" value="Copy"/>
+                <button name="filename" value={{ file[0] }}>Copy</button>
             </form>
         </td>
         <td>
             <form action="http://localhost:5000/file_delete" method="POST">
-                <input type="text" name="filename"/><input type="submit" value="Delete"/>
+                <button name="filename" value={{ file[0] }}>Delete</button>
             </form>
         </td>
     </tr>

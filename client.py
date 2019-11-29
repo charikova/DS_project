@@ -46,6 +46,7 @@ def file_create():
 def file_download():
     name = current_user
     filename = request.form.getlist('filename')[0]
+    print(filename)
     global path
     path += '/'
     path += filename
@@ -56,6 +57,7 @@ def file_download():
     host = args['ip']
     port = args['port']
     s = socket.socket()
+    print(path)
     command = {"command": "file_download",
                "args": {
                    "username": name,
@@ -67,6 +69,7 @@ def file_download():
     except requests.exceptions.ReadTimeout:
         pass
     s.connect((host, port))
+    print('a')
     filename = command["args"]["path"].split("/")[-1]
     with open('{}'.format(filename), 'wb') as f:
         while True:
@@ -136,6 +139,7 @@ def file_delete():
 def file_info():
     name = current_user
     filename = request.form.getlist('filename')[0]
+    print(filename)
     global path
     path += '/'
     path += filename
@@ -192,7 +196,8 @@ def open_directory():
     global current_user
     global path
     name = current_user
-    dirname = request.form.getlist('dirname')[0]
+    dirname = request.form.getlist('filename')[0]
+    print(dirname)
     path += '/'
     path += dirname
     response = json.loads(
@@ -221,8 +226,6 @@ def delete_directory():
     global path
     path += '/'
     path += filename
-    print(name)
-    print(path)
     response = json.loads(
         requests.get('http://18.222.226.202:1338',
                      json={"command": "delete_dir", "args": {"username": name, "path": path}}).text)
