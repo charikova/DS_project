@@ -8,14 +8,15 @@ import os
 import subprocess
 import socket
 from multiprocessing import Process
-
 import requests
 
 PORT_http = 1337
 PORT_ftp_send = 7331
-node_ip = "10.1.1.141"
+node_ip = [l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1],
+                       [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in
+                         [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
 leader_ip = ""
-nameserver_ip = "10.1.1.167"
+nameserver_ip = "10.0.16.80"
 nameserver_port = 1338
 replicas = []
 beat = 0
