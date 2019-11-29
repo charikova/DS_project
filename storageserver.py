@@ -13,7 +13,7 @@ import requests
 
 PORT_http = 1337
 PORT_ftp_send = 7331
-node_ip = "10.1.1.141"
+node_ip = "10.1.1.129"
 leader_ip = ""
 nameserver_ip = "10.1.1.167"
 nameserver_port = 1338
@@ -422,8 +422,13 @@ def send_fs(message):
 
 
 def renew_beat():
-    global beat
-    beat = time.time()
+    global last_beat
+    last_beat = time.time()
+
+
+def change_leader(message):
+    global leader_ip
+    leader_ip = message["args"]["ip"]
 
 
 class Server(BaseHTTPRequestHandler):
@@ -464,6 +469,8 @@ class Server(BaseHTTPRequestHandler):
             data_json = send_fs(message)
         elif command == "beat":
             renew_beat()
+        elif command == "new_leader":
+            change_leader(message)
         else:
             data_json = json.dumps({"status": "error", "message": "unknown command"})
 
@@ -487,6 +494,13 @@ class HeartBeatLeader(object):
     def run(self):
         while True:
             message = {"command": "beat"}
+            try:
+                requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=message, timeout=1)
+            except requests.exceptions.ReadTimeout:
+                pass
+            except requests.exceptions.ConnectionError:
+                pass
+
             for node in replicas:
                 try:
                     response = json.loads(
@@ -495,11 +509,10 @@ class HeartBeatLeader(object):
                     response = "node dead"
                 except requests.exceptions.ConnectionError:
                     response = "node dead"
-                print(response)
 
 
 class HeartBeatFollower(object):
-    def __init__(self, interval=1):
+    def __init__(self, interval=2):
         self.interval = interval
 
         thread = threading.Thread(target=self.run, args=())
@@ -507,8 +520,26 @@ class HeartBeatFollower(object):
         thread.start()
 
     def run(self):
-        if beat - last_beat > 5:
-            print("leader ded")
+        global beat
+        global last_beat
+        global leader_ip
+        time.sleep(5)
+        while True:
+            beat = time.time()
+            if beat - last_beat > 2:
+                print("leader ded")
+
+                message = {"command": "change_leader", "args": {"ip": node_ip}}
+                response = json.loads(
+                    requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=message, timeout=1).text)
+                if response["status"] == "OK":
+                    leader_ip = node_ip
+                    hbeat = HeartBeatLeader()
+                    get_replicas_list()
+                    for node in replicas:
+                        message_to_replicas = {"command": "new_leader", "args": {"ip": node_ip}}
+                        requests.get('http://' + node_ip + ':' + str(PORT_http), json=message_to_replicas, timeout=1)
+                break
 
 
 if __name__ == "__main__":
@@ -523,6 +554,7 @@ if __name__ == "__main__":
         get_replicas_list()
         hbeat = HeartBeatLeader()
     else:
+        print("follower state")
         hbeat = HeartBeatFollower()
 
     print(f"Starting server on localhost:", PORT_http)
