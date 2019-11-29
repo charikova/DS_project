@@ -441,9 +441,8 @@ class Server(BaseHTTPRequestHandler):
         print(message)
         command = message["command"]
         if leader_ip == node_ip and command != "file_upload" and command != "file_download" \
-                and command != "send_fs" and command != "beat":
+                and command != "send_fs" and command != "beat" and command != "new_leader":
             commit_to_replicas(message)
-            print("commited")
         if command == "init":
             data_json = init_dir(message)
         elif command == "create_dir":
@@ -465,7 +464,6 @@ class Server(BaseHTTPRequestHandler):
         elif command == "file_download":
             data_json = file_download(message)
         elif command == "file_upload":
-            print("s")
             data_json = file_upload(message)
             start_replicated_upload(message)
         elif command == "send_fs":
@@ -534,8 +532,7 @@ class HeartBeatFollower(object):
         while True:
             beat = time.time()
             if beat - last_beat > 5:
-                print("leader ded")
-                time.sleep(random.uniform(0.1, 1.9))
+                time.sleep(random.uniform(1.1, 1.9))
                 message = {"command": "change_leader", "args": {"ip": node_ip}}
                 response = json.loads(
                     requests.get('http://' + nameserver_ip + ':' + str(nameserver_port), json=message, timeout=1).text)
@@ -546,7 +543,7 @@ class HeartBeatFollower(object):
                     for node in replicas:
                         message_to_replicas = {"command": "new_leader", "args": {"ip": node_ip}}
                         requests.get('http://' + node_ip + ':' + str(PORT_http), json=message_to_replicas, timeout=1)
-                break
+                    break
 
 
 if __name__ == "__main__":
