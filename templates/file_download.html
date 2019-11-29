@@ -1,15 +1,14 @@
-<!doctype html>
 <html>
 <body>
 <table border=0>
     <tr>
-        <td>{{ result }}</td>
+        {{ filename }}
+        <form action="http://localhost:5000/download" method="POST">
+            <button name="name" value={{ filename }}>Download</button>
+        </form>
     </tr>
     <tr>
         <td>
-            <form>
-                <input type="button" value="Previous page" onClick='javascript:history.back();'>
-            </form>
             <form action="http://localhost:5000/filesystem" method="POST">
                 <button name="name" value={{ user }}>Go to main page</button>
             </form>

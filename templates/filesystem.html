@@ -21,6 +21,14 @@
             </form>
         </td>
     </tr>
+    <tr>
+        <td>
+            <form action="http://localhost:5000/file_upload" method=post enctype=multipart/form-data>
+                <p><input type=file name=file>
+                    <input type=submit value=Upload>
+            </form>
+        </td>
+    </tr>
 </table>
 
 {{ name }}'s files:<br>
@@ -63,14 +71,10 @@
             </form>
         </td>
         <td>
-            <form action="http://localhost:5000/file_upload" method="POST">
-                <button name="filename" value={{ file[0] }}>Upload</button>
-            </form>
-        </td>
-        <td>
             <form action="http://localhost:5000/file_download" method="POST">
                 <button name="filename" value={{ file[0] }}>Download</button>
             </form>
+
         </td>
         <td>
             <form action="http://localhost:5000/file_move" method="POST">

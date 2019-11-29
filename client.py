@@ -1,7 +1,9 @@
 import json
+import os
 import socket
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, send_file
 import requests
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__, template_folder='templates')
 
@@ -37,8 +39,8 @@ def file_create():
     path += '/'
     path += filename
     response = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_create",
-                                                                         "args": {"username": name,
-                                                                                  "path": path}}).text)
+                                                                           "args": {"username": name,
+                                                                                    "path": path}}).text)
     return render_template("file_create.html", result=response, user=name)
 
 
@@ -50,8 +52,8 @@ def file_download():
     path += '/'
     path += filename
     host = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_download",
-                                                                   "args": {"username": name,
-                                                                            "path": path}}).text)
+                                                                       "args": {"username": name,
+                                                                                "path": path}}).text)
     args = host['args']
     host = args['ip']
     port = args['port']
@@ -76,16 +78,29 @@ def file_download():
             f.write(data)
     f.close()
     s.close()
-    return render_template("file_download.html", result=host, user=name)
+    return render_template("file_download.html", result=host, user=name, filename=filename)
+
+
+@app.route('/download', methods=['POST', 'GET'])
+def downloadFile ():
+    path = request.form.getlist('name')[0]
+    return send_file(path, as_attachment=True)
+
 
 
 @app.route('/file_upload', methods=['POST', 'GET'])
 def file_upload():
     name = current_user
-    filename = request.form.getlist('filename')[0]
     global path
     path += '/'
-    path += filename
+    fileplace = ''
+
+    if request.method == 'POST':
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+        fileplace = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
     host = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_upload",
                                                                    "args": {"username": name,
                                                                             "path": path}}).text)
@@ -96,20 +111,20 @@ def file_upload():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  # Create a socket object
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     command = {"command": "file_upload",
-               "args": {
-                   "username": name,
-                   "path": path + 'a.png'
-               }
-               }
+           "args": {
+               "username": name,
+               "path": path + filename
+           }
+           }
     try:
         requests.get('http://' + host + ':' + str(1337), json=command, timeout=1)
     except requests.exceptions.ReadTimeout:
         pass
     s.connect((host, 7331))
-    filepath = './a.png'
-    f = open(filepath, 'rb')
+    filepath = path
+    f = open(fileplace, 'rb')
     l = f.read(1024)
-    while (l):
+    while l:
         s.send(l)
         l = f.read(1024)
     f.close()
@@ -168,7 +183,8 @@ def file_move():
     path += filename
     response = json.loads(
         requests.get('http://18.222.226.202:1338',
-                     json={"command": "file_move", "args": {"username": name, "src_path": path, "dst_path": path_to_move}}).text)
+                     json={"command": "file_move",
+                           "args": {"username": name, "src_path": path, "dst_path": path_to_move}}).text)
     return render_template("file_copy.html", result=response, user=name)
 
 
@@ -211,7 +227,8 @@ def directory_create():
     path += '/'
     path += name
     response = json.loads(
-        requests.get('http://18.222.226.202:1338', json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
+        requests.get('http://18.222.226.202:1338',
+                     json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
     return render_template("directory_create.html", result=response, user=current_user)
 
 
@@ -231,6 +248,8 @@ def delete_directory():
 
 current_user = ''
 path = ''
+UPLOAD_FOLDER = './upload_folder'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 if __name__ == '__main__':
     app.run(debug=True)
