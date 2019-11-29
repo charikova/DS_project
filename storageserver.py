@@ -394,6 +394,7 @@ def request_fs():
         s.close()
 
         os.system("unzip -u bckp.zip")
+        os.system("rm bckp.zip")
     except requests.exceptions.ConnectionError:
         response = "node dead"
 
@@ -403,6 +404,7 @@ def send_fs(message):
     os.system("zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\"")
     s = socket.socket()  # Create a socket object
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    print(node)
     s.connect((node, PORT_ftp_send))
 
     filepath = 'bckp.zip'
@@ -413,6 +415,8 @@ def send_fs(message):
         l = f.read(1024)
     f.close()
     s.close()
+    os.system("rm bckp.zip")
+    return json.dumps({"status": "ok"})
 
 
 class Server(BaseHTTPRequestHandler):
@@ -423,7 +427,7 @@ class Server(BaseHTTPRequestHandler):
         data_json = json.dumps('{}')
         print(message)
         command = message["command"]
-        if leader_ip == node_ip and command != "file_upload" and command != "file_download":
+        if leader_ip == node_ip and command != "file_upload" and command != "file_download" and command != "send_fs":
             commit_to_replicas(message)
         if command == "init":
             data_json = init_dir(message)
@@ -448,8 +452,8 @@ class Server(BaseHTTPRequestHandler):
         elif command == "file_upload":
             data_json = file_upload(message)
             start_replicated_upload(message)
-        elif command - "send_fs":
-            send_fs(message)
+        elif command == "send_fs":
+            data_json = send_fs(message)
         else:
             data_json = json.dumps({"status": "error", "message": "unknown command"})
 
