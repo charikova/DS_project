@@ -6,10 +6,9 @@ import threading
 import time
 import os
 
-'''time.sleep(15)
+time.sleep(15)
 neo4j_ip = os.environ.get('neo4j_host')
-print(neo4j_ip)'''
-neo4j_ip = 'localhost'
+print(neo4j_ip)
 neofull = 'http://' + neo4j_ip + ':7474'
 db = client.GraphDatabase(neofull, username="DFSnameserver", password="123")
 user_relation_label = "own"
