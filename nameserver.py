@@ -6,9 +6,10 @@ import threading
 import time
 import os
 
-time.sleep(15)
+'''time.sleep(15)
 neo4j_ip = os.environ.get('neo4j_host')
-print(neo4j_ip)
+print(neo4j_ip)'''
+neo4j_ip = 'localhost'
 neofull = 'http://' + neo4j_ip + ':7474'
 db = client.GraphDatabase(neofull, username="DFSnameserver", password="123")
 user_relation_label = "own"
@@ -342,23 +343,29 @@ def new_node(message):
 
 
 def change_leader(message):
-    global leader_ip, server_ip, leader_alive
+    global leader_ip, server_ip, leader_alive, last_beat
     data = {}
-    if not leader_alive:
+    print(leader_ip)
+    print(leader_alive)
+    if leader_alive == False:
+        last_beat = time.time()
+        leader_alive = True
         print("ХАВАЮ ПИСЬКИ")
         new_ip = message["args"]["ip"]
-        leader_alive = True
         leader_ip = new_ip
         server_ip = 'http://' + new_ip + ':1337'
         data = {
             "status": "OK",
             "message": "Leader successfully changed"
         }
+        last_beat = time.time()
     else:
         data = {
             "status": "ERROR",
             "message": "Leader already alive"
         }
+    print(leader_alive)
+    print("ДОХАВАЛ ПИСЬКИ")
     return json.dumps(data)
 
 
@@ -459,8 +466,9 @@ class HeartBeatFollower(object):
         while True:
             beat = time.time()
             if beat - last_beat > 5:
-                # print("Leader ded")
+                print("Leader ded")
                 leader_alive = False
+                time.sleep(2)
 
 
 if __name__ == "__main__":
