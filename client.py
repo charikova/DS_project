@@ -94,7 +94,7 @@ def file_download():
 def downloadFile ():
     global ip
     path = request.form.getlist('name')[0]
-    return send_file(path, as_attachment=True, ip=ip)
+    return send_file(path, as_attachment=True)
 
 
 
@@ -295,7 +295,7 @@ current_user = ''
 path = ''
 UPLOAD_FOLDER = './upload_folder'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-igor = 'http://10.0.16.80:1338'
+igor = 'http://10.1.1.141:1338'
 ip = 'http://10.1.1.131:5000/'
 
 if __name__ == '__main__':

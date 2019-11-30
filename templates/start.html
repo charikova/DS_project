@@ -8,7 +8,7 @@
 <table>
     <tr>
         <td>
-            <form action="http://10.1.1.131:5000/initialize" method="POST">
+            <form action={{ ip }}initialize method="POST">
                 <p>New username<input type="text" name="username"/><input type="submit" value="Create"/></p>
             </form>
         </td>
@@ -21,10 +21,10 @@
             <form>
                 <input type="button" value="Previous page" onClick='javascript:history.back();'>
             </form>
-            <form action="http://10.1.1.131:5000/">
+            <form action={{ ip }}>
                 <input type="submit" value="Go to main page"/>
             </form>
-            <form action="http://10.1.1.131:5000/">
+            <form action={{ ip }}>
                 <input type="submit" value="Log out"/>
             </form>
         </td>

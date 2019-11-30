@@ -9,21 +9,21 @@
 <table>
     <tr>
         <td>
-            <form action="http://10.1.1.131:5000/directory_create" method="POST">
+            <form action={{ ip }}directory_create method="POST">
                 <p>New directory<input type="text" name="dirname"/><input type="submit" value="Create"/></p>
             </form>
         </td>
     </tr>
     <tr>
         <td>
-            <form action="http://10.1.1.131:5000/file_create" method="POST">
+            <form action={{ ip }}file_create method="POST">
                 <p>New file<input type="text" name="filename"/><input type="submit" value="Create"/></p>
             </form>
         </td>
     </tr>
     <tr>
         <td>
-            <form action="http://10.1.1.131:5000/file_upload" method=post enctype=multipart/form-data>
+            <form action={{ ip }}file_upload method=post enctype=multipart/form-data>
                 <p><input type=file name=file>
                     <input type=submit value=Upload>
             </form>
@@ -32,7 +32,7 @@
 </table>
 
 {{ name }}'s files:<br>
-<form action="http://10.1.1.131:5000/">
+<form action={{ ip }}>
     <input type="submit" value="Log out"/>
 </form>
 
@@ -47,12 +47,12 @@
         <td></td>
         <td></td>
         <td>
-            <form action="http://10.1.1.131:5000/filesystem_dir" method="POST">
+            <form action={{ ip }}filesystem_dir method="POST">
                 <button name="filename" value={{ file[0] }}>Open</button>
             </form>
         </td>
         <td>
-            <form action="http://10.1.1.131:5000/are_you_sured" method="POST">
+            <form action={{ ip }}are_you_sured method="POST">
                 <button name="filename" value={{ file[0] }}>Delete</button>
             </form>
         </td>
@@ -65,29 +65,29 @@
             {{ file[0] }}
         </td>
         <td>
-            <form action="http://10.1.1.131:5000/file_info" method="POST">
+            <form action={{ ip }}file_info method="POST">
                 <button name="filename" value={{ file[0] }}>Info</button>
             </form>
         </td>
         <td>
-            <form action="http://10.1.1.131:5000/file_download" method="POST">
+            <form action={{ ip }}file_download method="POST">
                 <button name="filename" value={{ file[0] }}>Download</button>
             </form>
 
         </td>
         <td>
-            <form action="http://10.1.1.131:5000/file_move" method="POST">
+            <form action={{ ip }}file_move method="POST">
                 <input type="text" name="path_to_move" required placeholder="destination path"/>
                 <button name="filename" value={{ file[0] }}>Move</button>
             </form>
         </td>
         <td>
-            <form action="http://10.1.1.131:5000/file_copy" method="POST">
+            <form action={{ ip }}file_copy method="POST">
                 <button name="filename" value={{ file[0] }}>Copy</button>
             </form>
         </td>
         <td>
-            <form action="http://10.1.1.131:5000/are_you_sure" method="POST">
+            <form action={{ ip }}are_you_sure method="POST">
                 <button name="filename" value={{ file[0] }}>Delete</button>
             </form>
         </td>
