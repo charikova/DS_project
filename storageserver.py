@@ -555,7 +555,7 @@ if __name__ == "__main__":
     if not system_status:
         try:
             os.system("rm -r */")
-        except OSError:
+        except Exception:
             pass
         request_fs()
     if leader_ip == node_ip:
