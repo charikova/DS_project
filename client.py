@@ -280,4 +280,4 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 igor = 'http://10.1.1.167:1338'
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='10.1.1.131', port=5000)
