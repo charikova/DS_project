@@ -25,9 +25,10 @@ def start():
 
 @app.route('/initialize', methods=['POST', 'GET'])
 def initialize():
+    global igor
     name = request.form.getlist('username')[0]
     response = json.loads(
-        requests.get('http://18.222.226.202:1338', json={"command": "init", "args": {"username": name}}).text)
+        requests.get(igor, json={"command": "init", "args": {"username": name}}).text)
     return render_template("initialize.html", result=response, user=name)
 
 
@@ -36,9 +37,10 @@ def file_create():
     name = current_user
     filename = request.form.getlist('filename')[0]
     global path
+    global igor
     path += '/'
     path += filename
-    response = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_create",
+    response = json.loads(requests.get(igor, json={"command": "file_create",
                                                                            "args": {"username": name,
                                                                                     "path": path}}).text)
     return render_template("file_create.html", result=response, user=name)
@@ -49,9 +51,10 @@ def file_download():
     name = current_user
     filename = request.form.getlist('filename')[0]
     global path
+    global igor
     path += '/'
     path += filename
-    host = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_download",
+    host = json.loads(requests.get(igor, json={"command": "file_download",
                                                                        "args": {"username": name,
                                                                                 "path": path}}).text)
     args = host['args']
@@ -92,6 +95,7 @@ def downloadFile ():
 def file_upload():
     name = current_user
     global path
+    global igor
     path += '/'
     fileplace = ''
 
@@ -101,7 +105,7 @@ def file_upload():
         fileplace = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
-    host = json.loads(requests.get('http://18.222.226.202:1338', json={"command": "file_upload",
+    host = json.loads(requests.get(igor, json={"command": "file_upload",
                                                                    "args": {"username": name,
                                                                             "path": path}}).text)
     args = host['args']
@@ -137,10 +141,11 @@ def file_delete():
     name = current_user
     filename = request.form.getlist('filename')[0]
     global path
+    global igor
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "file_delete", "args": {"username": name, "path": path}}).text)
 
     return render_template("file_delete.html", result=response, user=name)
@@ -150,12 +155,12 @@ def file_delete():
 def file_info():
     name = current_user
     filename = request.form.getlist('filename')[0]
-    print(filename)
     global path
+    global igor
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "file_info", "args": {"username": name, "path": path}}).text)
     return render_template("file_info.html", result=response, user=name)
 
@@ -165,10 +170,11 @@ def file_copy():
     name = current_user
     filename = request.form.getlist('filename')[0]
     global path
+    global igor
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "file_copy", "args": {"username": name, "path": path}}).text)
     return render_template("file_copy.html", result=response, user=name)
 
@@ -179,10 +185,11 @@ def file_move():
     filename = request.form.getlist('filename')[0]
     path_to_move = '/' + request.form.getlist('path_to_move')[0] + '/' + filename
     global path
+    global igor
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "file_move",
                            "args": {"username": name, "src_path": path, "dst_path": path_to_move}}).text)
     return render_template("file_copy.html", result=response, user=name)
@@ -192,12 +199,13 @@ def file_move():
 def log_in():
     global current_user
     global path
+    global igor
     name = current_user
     name = request.form.getlist('name')[0]
     current_user = name
     path = ''
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
     files = response['names']
     return render_template("filesystem.html", result=files, name=current_user)
@@ -207,13 +215,14 @@ def log_in():
 def open_directory():
     global current_user
     global path
+    global igor
     name = current_user
     dirname = request.form.getlist('filename')[0]
     print(dirname)
     path += '/'
     path += dirname
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
     files = response['names']
     return render_template("filesystem_dir.html", result=files, name=current_user, directory=path)
@@ -224,10 +233,11 @@ def directory_create():
     global current_user
     name = request.form.getlist('dirname')[0]
     global path
+    global igor
     path += '/'
     path += name
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "create_dir", "args": {"username": current_user, "path": path}}).text)
     return render_template("directory_create.html", result=response, user=current_user)
 
@@ -237,10 +247,11 @@ def delete_directory():
     name = current_user
     filename = request.form.getlist('filename')[0]
     global path
+    global igor
     path += '/'
     path += filename
     response = json.loads(
-        requests.get('http://18.222.226.202:1338',
+        requests.get(igor,
                      json={"command": "delete_dir", "args": {"username": name, "path": path}}).text)
 
     return render_template("dir_delete.html", result=response, user=name)
@@ -250,6 +261,7 @@ current_user = ''
 path = ''
 UPLOAD_FOLDER = './upload_folder'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+igor = 'http://18.222.226.202:1338'
 
 if __name__ == '__main__':
     app.run(debug=True)
