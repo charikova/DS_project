@@ -553,7 +553,10 @@ if __name__ == "__main__":
     httpd = HTTPServer(server_address, Server)
     system_status = initialize_node()
     if not system_status:
-        os.system("rm -r */")
+        try:
+            os.system("rm -r */")
+        except OSError:
+            pass
         request_fs()
     if leader_ip == node_ip:
         get_replicas_list()
