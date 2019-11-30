@@ -16,7 +16,7 @@ node_ip = [l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname(
                        [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in
                          [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
 leader_ip = ""
-nameserver_ip = "10.0.16.80"
+nameserver_ip = "10.1.1.167"
 nameserver_port = 1338
 replicas = []
 beat = 0
@@ -406,7 +406,8 @@ def request_fs():
 
 def send_fs(message):
     node = message["args"]["ip"]
-    os.system("zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\"")
+    os.system(
+        "zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\" \"requirements.txt\" \"DockerFile\" \"docker-compose.yml\" ")
     s = socket.socket()  # Create a socket object
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((node, PORT_ftp_send))
