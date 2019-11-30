@@ -248,13 +248,29 @@ def delete_directory():
     filename = request.form.getlist('filename')[0]
     global path
     global igor
+    print(path)
     path += '/'
     path += filename
+    print(path)
     response = json.loads(
         requests.get(igor,
                      json={"command": "delete_dir", "args": {"username": name, "path": path}}).text)
 
     return render_template("dir_delete.html", result=response, user=name)
+
+
+@app.route('/are_you_sure', methods=['POST', 'GET'])
+def are_you_sure():
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    return render_template("are_you_sure.html", result=filename, user=name)
+
+
+@app.route('/are_you_sured', methods=['POST', 'GET'])
+def are_you_sured():
+    name = current_user
+    filename = request.form.getlist('filename')[0]
+    return render_template("are_you_sured.html", result=filename, user=name)
 
 
 current_user = ''

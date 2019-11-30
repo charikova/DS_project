@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Are you sure?</title>
+</head>
+<body>
+Are you sure that you want to delete this file? This action could't be undone.
+<form action="http://localhost:5000/file_delete" method="POST">
+    <button name="filename" value={{ result }}>Delete</button>
+</form>
+</body>
+</html>
