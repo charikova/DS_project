@@ -218,9 +218,9 @@ def open_directory():
     global igor
     name = current_user
     dirname = request.form.getlist('filename')[0]
-    if path[1:(len(dirname) + 1)] != dirname:
-        path += '/'
-        path += dirname
+    print(dirname)
+    path += '/'
+    path += dirname
     response = json.loads(
         requests.get(igor,
                      json={"command": "list_dir", "args": {"username": name, "path": path}}).text)
