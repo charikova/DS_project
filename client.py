@@ -277,7 +277,7 @@ current_user = ''
 path = ''
 UPLOAD_FOLDER = './upload_folder'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-igor = 'http://10.1.1.167:1338'
+igor = 'http://10.1.1.141:1338'
 
 if __name__ == '__main__':
     app.run(host='10.1.1.131', port=5000)
