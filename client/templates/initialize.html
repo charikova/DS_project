@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+   <body>
+      <table border=0>
+    <tr>
+        <td>{{ result }}</td>
+    </tr>
+    <tr>
+        <td>
+            <form>
+                <input type="button" value="Previous page" onClick='javascript:history.back();'>
+            </form>
+            <form action={{ ip }}>
+                <input type="submit" value="Go to main page"/>
+            </form>
+            <form action={{ ip }}>
+                <input type="submit" value="Log out"/>
+            </form>
+        </td>
+    </tr>
+</table>
+   </body>
+</html>

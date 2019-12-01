@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filesystem</title>
+</head>
+<body>
+<table>
+    <tr>
+        <td>
+            <form action={{ ip }}filesystem method="POST">
+                <p>Username<input type="text" name="name"/><input type="submit" value="Log in"/></p>
+            </form>
+        </td>
+    <tr>
+    <tr>
+        <td>{{ result }}</td>
+    </tr>
+    <tr>
+        <td>
+            <form>
+                <input type="button" value="Previous page" onClick='javascript:history.back();'>
+            </form>
+            <form action={{ ip }}>
+                <input type="submit" value="Go to main page"/>
+            </form>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Initialize</title>
+</head>
+<body>
+<table>
+    <tr>
+        <td>
+            <form action={{ ip }}initialize method="POST">
+                <p>New username<input type="text" name="username"/><input type="submit" value="Create"/></p>
+            </form>
+        </td>
+    <tr>
+    <tr>
+        <td>{{ result }}</td>
+    </tr>
+    <tr>
+        <td>
+            <form>
+                <input type="button" value="Previous page" onClick='javascript:history.back();'>
+            </form>
+            <form action={{ ip }}>
+                <input type="submit" value="Go to main page"/>
+            </form>
+            <form action={{ ip }}>
+                <input type="submit" value="Log out"/>
+            </form>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<html>
+<body>
+<table border=0>
+    <tr>
+        {{ filename }}
+        <form action={{ ip }}download method="POST">
+            <button name="name" value={{ filename }}>Download</button>
+        </form>
+    </tr>
+    <tr>
+        <td>
+            <form action={{ ip }}filesystem method="POST">
+                <button name="name" value={{ user }}>Go to main page</button>
+            </form>
+            <form action={{ ip }}>
+                <input type="submit" value="Log out"/>
+            </form>
+        </td>
+    </tr>
+
+</table>
+</body>
+</html>

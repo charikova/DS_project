@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Filesystem</title>
+
+</head>
+<body>
+<table>
+    <tr>
+        <td>
+            <form action={{ ip }}directory_create method="POST">
+                <p>New directory<input type="text" name="dirname"/><input type="submit" value="Create"/></p>
+            </form>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form action={{ ip }}file_create method="POST">
+                <p>New file<input type="text" name="filename"/><input type="submit" value="Create"/></p>
+            </form>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <form action={{ ip }}file_upload method=post enctype=multipart/form-data>
+                <p><input type=file name=file>
+                    <input type=submit value=Upload>
+            </form>
+        </td>
+    </tr>
+</table>
+
+{{ name }}'s files:<br>
+<form action={{ ip }}>
+    <input type="submit" value="Log out"/>
+</form>
+
+<table>
+    {% for file in result %}
+    {% if file[1] == 'dir' %}
+    <tr>
+        <td>
+            {{ file[0] }}
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>
+            <form action={{ ip }}filesystem_dir method="POST">
+                <button name="filename" value={{ file[0] }}>Open</button>
+            </form>
+        </td>
+        <td>
+            <form action={{ ip }}are_you_sured method="POST">
+                <button name="filename" value={{ file[0] }}>Delete</button>
+            </form>
+        </td>
+
+    </tr>
+    {% endif %}
+    {% if file[1] == 'file' %}
+    <tr>
+        <td>
+            {{ file[0] }}
+        </td>
+        <td>
+            <form action={{ ip }}file_info method="POST">
+                <button name="filename" value={{ file[0] }}>Info</button>
+            </form>
+        </td>
+        <td>
+            <form action={{ ip }}file_download method="POST">
+                <button name="filename" value={{ file[0] }}>Download</button>
+            </form>
+
+        </td>
+        <td>
+            <form action={{ ip }}file_move method="POST">
+                <input type="text" name="path_to_move" required placeholder="destination path"/>
+                <button name="filename" value={{ file[0] }}>Move</button>
+            </form>
+        </td>
+        <td>
+            <form action={{ ip }}file_copy method="POST">
+                <button name="filename" value={{ file[0] }}>Copy</button>
+            </form>
+        </td>
+        <td>
+            <form action={{ ip }}are_you_sure method="POST">
+                <button name="filename" value={{ file[0] }}>Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+</table>
+</body>
+</html>
