@@ -1,0 +1,28 @@
+version: "3"
+
+services:
+  neo4j:
+    image: neo4j:3.5.13
+    hostname: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - $HOME/neo4j/data:/data
+
+  nameserver:
+    build: .
+    environment:
+      neo4j_host: "neo4j"
+    ports:
+      - 1338:1338
+    links:
+      - neo4j
+    depends_on:
+      - neo4j
+
+  
+
+  
+
+
