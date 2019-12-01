@@ -240,7 +240,7 @@ def file_move(message):
         if len(dpaths) > 2:
             dfid = find_create(dpaths, username)
             query = "MATCH (s) WHERE ID(s) = %s MATCH (n) WHERE ID(n) = %s MATCH (x)-[r]->(n) DELETE r " \
-                    "CREATE (s)-[f:own]->(n)" % (str(dfid), str(sfid))
+                    "CREATE (s)-[f:store]->(n)" % (str(dfid), str(sfid))
             db.query(query)
         else:
             query = "MATCH (s:Users) WHERE s.name = \"%s\" MATCH (n) WHERE ID(n) = %s MATCH (x)-[r]->(n) DELETE r " \
