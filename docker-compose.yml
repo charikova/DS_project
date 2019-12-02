@@ -13,6 +13,8 @@ services:
       placement:
         constraints:
           - node.role == manager
+    networks:
+      - app
 
   nameserver:
     image: grizzly1143/dfs_nameserver
@@ -33,6 +35,8 @@ services:
       placement:
         constraints:
           - node.role == manager
+    networks:
+      - app
 
   visualizer:
     image: dockersamples/visualizer:stable
@@ -50,9 +54,9 @@ services:
   storageserver:
     image: grizzly1143/dfs_storage
     build: ./storage
-    network_mode: "host"
     environment:
       name_ip: "nameserver"
+      my_ip: "storageserver"
     tty: true
     ports:
       - 1337:1337
@@ -66,6 +70,8 @@ services:
         window: 120s
     depends_on:
       - nameserver
+    networks:
+      - app
 
   client:
     image: grizzly1143/dfs_client
@@ -73,6 +79,7 @@ services:
     ports:
       - 5000:5000
     environment:
+      my_ip: "client"
       name_ip: "nameserver"
     deploy:
       replicas: 1
@@ -83,3 +90,9 @@ services:
         window: 120s
     depends_on:
       - nameserver
+    networks:
+      - app 
+
+networks:
+  app:
+    driver: overlay

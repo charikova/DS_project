@@ -9,7 +9,7 @@ from werkzeug.utils import secure_filename
 node_ip = requests.get('https://api.ipify.org').text
 igor_ip = os.environ.get('name_ip')
 app = Flask(__name__, template_folder='templates')
-
+in_ip = os.environ.get('my_ip')
 
 @app.route('/')
 def index():
@@ -296,8 +296,8 @@ current_user = ''
 path = ''
 UPLOAD_FOLDER = './upload_folder'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-igor = 'http://10.0.16.80:1338'
+igor = igor_ip
 ip = 'http://' + node_ip + ':5000/'
-
+print("My ip: ", in_ip)
 if __name__ == '__main__':
-    app.run(host=node_ip, port=5000)
+    app.run(host='localhost', port=5000)
