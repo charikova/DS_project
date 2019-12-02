@@ -1,5 +1,7 @@
 # Group Project Assignment: Distributed File System
 ## Mariia Charikova, Igor Krasheninnikov, Roman Solovev <br>BS17-SB
+## Backup Video of working system:
+https://drive.google.com/file/d/18WsAa2DlePjVnSI5JXkVPJHaKN3p9v7b/view?usp=sharing
 ## How to launch and use the system
 napishite che nibud pls
 ## Architectural diagram
