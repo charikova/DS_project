@@ -3,9 +3,17 @@
 ## Backup Video of working system:
 https://drive.google.com/file/d/18WsAa2DlePjVnSI5JXkVPJHaKN3p9v7b/view?usp=sharing
 ## How to launch and use the system
-napishite che nibud pls
+### First choice
+* `cd` in every component folder and just run `docker-compose up`
+* docker will pull all necessary images and start every part of the system separately
+### Second choice
+* Initiate the docker swarm network
+* Run `sudo docker stack deploy --compose-file docker-compose.yml dfs`
+* Docker will automatically pull all necessary images and will create 3 containers on manager node: Nameserver, Neo4j and visualization and one Client container on worker node and three replicas of Storage server container
 ## Architectural diagram
 ![](https://i.imgur.com/LWZkSHF.png)
+### Docker swarm architecture
+![](https://i.imgur.com/98isMU8.png)
 ## Description of communication protocols
 ### Initialize
 ![](https://i.imgur.com/8L1CNEo.png)
