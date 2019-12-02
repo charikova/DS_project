@@ -4,6 +4,7 @@
 https://drive.google.com/file/d/18WsAa2DlePjVnSI5JXkVPJHaKN3p9v7b/view?usp=sharing
 ## How to launch and use the system
 ### First choice
+* Define nameserver ip in client and storage files
 * `cd` in every component folder and just run `docker-compose up`
 * docker will pull all necessary images and start every part of the system separately
 ### Second choice
