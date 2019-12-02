@@ -16,7 +16,7 @@ node_ip = [l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname(
                        [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in
                          [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
 leader_ip = ""
-nameserver_ip = "10.0.16.80"
+nameserver_ip = os.environ.get('name_ip')
 nameserver_port = 1338
 replicas = []
 beat = 0
