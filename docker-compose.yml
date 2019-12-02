@@ -57,7 +57,6 @@ services:
     ports:
       - 1337:1337
       - 7331:7331
-      - 1338:1338
     deploy:
       replicas: 3
       restart_policy:
@@ -72,7 +71,7 @@ services:
     image: grizzly1143/dfs_client
     build: ./client
     ports:
-      - 80:5000
+      - 5000:5000
     environment:
       name_ip: "nameserver"
     deploy:
