@@ -398,7 +398,7 @@ def request_fs():
         conn.close()
         s.close()
 
-        os.system("unzip -u bckp.zip")
+        os.system("unzip bckp.zip")
         os.system("rm bckp.zip")
     except requests.exceptions.ConnectionError:
         response = "node dead"
@@ -407,7 +407,7 @@ def request_fs():
 def send_fs(message):
     node = message["args"]["ip"]
     os.system(
-        "zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\" \"requirements.txt\" \"DockerFile\" \"docker-compose.yml\" ")
+        "zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\" \"requirements.txt\" \"Dockerfile\" \"docker-compose.yml\" ")
     s = socket.socket()  # Create a socket object
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((node, PORT_ftp_send))
