@@ -7,7 +7,7 @@ from werkzeug.utils import secure_filename
 
 
 node_ip = requests.get('https://api.ipify.org').text
-igor_ip = neo4j_ip = os.environ.get('name_ip')
+igor_ip = os.environ.get('name_ip')
 app = Flask(__name__, template_folder='templates')
 
 
