@@ -15,7 +15,7 @@ services:
           - node.role == manager
 
   nameserver:
-    image: 10.0.0.60:5000/nameserver
+    image: grizzly1143/dfs_nameserver
     build: ./nameserver
     environment:
       neo4j_host: "neo4j"
@@ -48,7 +48,7 @@ services:
           - node.role == manager   
 
   storageserver:
-    image: 10.0.0.60:5000/storageserver
+    image: grizzly1143/dfs_storage
     build: ./storage
     network_mode: "host"
     environment:
@@ -69,7 +69,7 @@ services:
       - nameserver
 
   client:
-    image: 10.0.0.60:5000/client
+    image: grizzly1143/dfs_client
     build: ./client
     ports:
       - 80:5000
