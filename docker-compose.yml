@@ -1,0 +1,88 @@
+version: "3"
+
+services:
+  neo4j:
+    image: neo4j:3.5.13
+    hostname: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
+    volumes:
+      - $HOME/neo4j/data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+
+  nameserver:
+    image: grizzly1143/dfs_nameserver
+    build: ./nameserver
+    environment:
+      neo4j_host: "neo4j"
+    ports:
+      - 1338:1338
+    depends_on:
+      - neo4j
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 20s
+        max_attempts: 3
+        window: 120s
+      placement:
+        constraints:
+          - node.role == manager
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - 80:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager   
+
+  storageserver:
+    image: grizzly1143/dfs_storage
+    build: ./storage
+    environment:
+      name_ip: "nameserver"
+      my_ip: "storageserver"
+    tty: true
+    ports:
+      - 1337:1337
+      - 7331:7331
+    deploy:
+      replicas: 3
+      restart_policy:
+        condition: on-failure
+        delay: 120s
+        max_attempts: 5
+        window: 120s
+    depends_on:
+      - nameserver
+
+  client:
+    image: grizzly1143/dfs_client
+    build: ./client
+    ports:
+      - 5000:5000
+    environment:
+      my_ip: "client"
+      name_ip: "nameserver"
+    deploy:
+      replicas: 1
+      placement:
+        constraints: [node.hostname==client]
+      restart_policy:
+        condition: on-failure
+        delay: 20s
+        max_attempts: 3
+        window: 120s
+    depends_on:
+      - nameserver

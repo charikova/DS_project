@@ -6,7 +6,6 @@ import threading
 import time
 import os
 
-time.sleep(15)
 neo4j_ip = os.environ.get('neo4j_host')
 print(neo4j_ip)
 neofull = 'http://' + neo4j_ip + ':7474'

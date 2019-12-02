@@ -15,8 +15,9 @@ PORT_ftp_send = 7331
 node_ip = [l for l in ([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")][:1],
                        [[(s.connect(('8.8.8.8', 53)), s.getsockname()[0], s.close()) for s in
                          [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) if l][0][0]
+node_ip = requests.get('https://api.ipify.org').text
 leader_ip = ""
-nameserver_ip = "10.0.16.80"
+nameserver_ip = os.environ.get('name_ip')
 nameserver_port = 1338
 replicas = []
 beat = 0
@@ -398,7 +399,7 @@ def request_fs():
         conn.close()
         s.close()
 
-        os.system("unzip -u bckp.zip")
+        os.system("unzip bckp.zip")
         os.system("rm bckp.zip")
     except requests.exceptions.ConnectionError:
         response = "node dead"
@@ -407,7 +408,7 @@ def request_fs():
 def send_fs(message):
     node = message["args"]["ip"]
     os.system(
-        "zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\" \"requirements.txt\" \"DockerFile\" \"docker-compose.yml\" ")
+        "zip -r bckp.zip $(ls) -x \"storageserver.py\" \"README.md\" \".zip\" \"requirements.txt\" \"Dockerfile\" \"docker-compose.yml\" ")
     s = socket.socket()  # Create a socket object
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((node, PORT_ftp_send))
